@@ -1,0 +1,210 @@
+MPLINK 5.08, LINKER
+Linker Map File - Created Mon Feb 13 12:07:41 2017
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000004
+                   .cinit    romdata   0x000004    program   0x000002
+                   .org_1       code   0x000008    program   0x000004
+                   .org_2       code   0x000018    program   0x000ad2
+.config_300001_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300001    program   0x000001
+.config_300003_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300003    program   0x000001
+.config_300005_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300005    program   0x000001
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000005      
+                            0x000008    0x00000b      
+                            0x000018    0x000ae9      
+                            0x300001    0x300001      
+                            0x300003    0x300003      
+                            0x300005    0x300005      
+            2783 out of 8472 program addresses used, program memory utilization is 32%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                    BUCLE   0x0000f8    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                CINC_NOPS   0x000aac    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+               COUNT_LINE   0x000038    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 DECISION   0x000368    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   DEFEAT   0x00038e    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 DEU_NOPS   0x000abe    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+               DOTZE_NOPS   0x000ae2    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+               FORTY_NOPS   0x000ace    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 HIGH_INT   0x00001c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            HI_INT_VECTOR   0x000008    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  HSYNC_1   0x000058    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 ID_0_INF   0x0003a6    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_INF_12_NOPS   0x0002f0    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_INF_15_NOPS   0x0002fc    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_INF_18_NOPS   0x000308    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_INF_25_NOPS   0x000318    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 ID_0_SUP   0x000354    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_0_SUP_0_NOPS   0x0002b8    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_SUP_10_NOPS   0x0002ce    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_SUP_13_NOPS   0x0002d6    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_SUP_20_NOPS   0x0002e4    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_0_SUP_4_NOPS   0x0002bc    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_0_SUP_7_NOPS   0x0002c4    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            ID_0_SUP_CONT   0x000394    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_1   0x0003d2    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    ID_10   0x00081a    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    ID_11   0x00087c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    ID_12   0x0008f8    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    ID_13   0x000982    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    ID_14   0x0009de    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    ID_15   0x000a4c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 ID_2_INF   0x000478    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_2_INF_3_NOPS   0x000348    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_2_INF_4_NOPS   0x00034c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 ID_2_SUP   0x000414    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_2_SUP_10_NOPS   0x00033e    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_2_SUP_3_NOPS   0x000328    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_2_SUP_4_NOPS   0x00032c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_2_SUP_7_NOPS   0x000336    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+              ID_2_SUP_V2   0x000448    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_3   0x0004b0    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  ID_3_V2   0x0004f4    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 ID_4_INF   0x000576    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 ID_4_SUP   0x000536    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_5   0x0005bc    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_6   0x000610    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_7   0x000698    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_8   0x000732    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_9   0x00079c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                INIT_INTS   0x0000be    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+               INIT_PORTS   0x0000a6    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 INIT_TMR   0x0000ca    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                INIT_VARS   0x0000d6    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  LOW_INT   0x0000a4    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+           LOW_INT_VECTOR   0x000018    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     MAIN   0x0000e8    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 N17_NOPS   0x000ac6    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  NEXT_IF   0x00010c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 NOU_NOPS   0x000ab8    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            PART_INFERIOR   0x00015c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            PART_SUPERIOR   0x000128    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    PINTA   0x000120    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+             RESET_VECTOR   0x000000    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 SET_NOPS   0x000ab0    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+              STOP_SIGNAL   0x0000a0    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            STOP_SIGNAL_1   0x000064    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+           STOP_SIGNAL_10   0x000080    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+           STOP_SIGNAL_11   0x000070    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            STOP_SIGNAL_2   0x00008c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            STOP_SIGNAL_3   0x000098    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_1   0x0001ac    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  TRAM_10   0x00027a    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  TRAM_11   0x000288    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  TRAM_12   0x000294    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  TRAM_13   0x0002a0    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  TRAM_14   0x0002ac    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_2   0x0001bc    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_3   0x0001d8    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_4   0x0001f2    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_5   0x00020a    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_6   0x000228    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_7   0x000240    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_8   0x000256    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_9   0x00026c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  VICTORY   0x000382    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+             RESET_VECTOR   0x000000    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            HI_INT_VECTOR   0x000008    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+           LOW_INT_VECTOR   0x000018    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 HIGH_INT   0x00001c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+               COUNT_LINE   0x000038    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  HSYNC_1   0x000058    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            STOP_SIGNAL_1   0x000064    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+           STOP_SIGNAL_11   0x000070    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+           STOP_SIGNAL_10   0x000080    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            STOP_SIGNAL_2   0x00008c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            STOP_SIGNAL_3   0x000098    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+              STOP_SIGNAL   0x0000a0    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  LOW_INT   0x0000a4    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+               INIT_PORTS   0x0000a6    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                INIT_INTS   0x0000be    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 INIT_TMR   0x0000ca    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                INIT_VARS   0x0000d6    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     MAIN   0x0000e8    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    BUCLE   0x0000f8    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  NEXT_IF   0x00010c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    PINTA   0x000120    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            PART_SUPERIOR   0x000128    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            PART_INFERIOR   0x00015c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_1   0x0001ac    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_2   0x0001bc    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_3   0x0001d8    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_4   0x0001f2    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_5   0x00020a    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_6   0x000228    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_7   0x000240    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_8   0x000256    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   TRAM_9   0x00026c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  TRAM_10   0x00027a    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  TRAM_11   0x000288    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  TRAM_12   0x000294    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  TRAM_13   0x0002a0    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  TRAM_14   0x0002ac    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_0_SUP_0_NOPS   0x0002b8    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_0_SUP_4_NOPS   0x0002bc    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_0_SUP_7_NOPS   0x0002c4    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_SUP_10_NOPS   0x0002ce    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_SUP_13_NOPS   0x0002d6    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_SUP_20_NOPS   0x0002e4    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_INF_12_NOPS   0x0002f0    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_INF_15_NOPS   0x0002fc    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_INF_18_NOPS   0x000308    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_0_INF_25_NOPS   0x000318    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_2_SUP_3_NOPS   0x000328    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_2_SUP_4_NOPS   0x00032c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_2_SUP_7_NOPS   0x000336    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+         ID_2_SUP_10_NOPS   0x00033e    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_2_INF_3_NOPS   0x000348    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+          ID_2_INF_4_NOPS   0x00034c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 ID_0_SUP   0x000354    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 DECISION   0x000368    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  VICTORY   0x000382    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                   DEFEAT   0x00038e    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+            ID_0_SUP_CONT   0x000394    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 ID_0_INF   0x0003a6    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_1   0x0003d2    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 ID_2_SUP   0x000414    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+              ID_2_SUP_V2   0x000448    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 ID_2_INF   0x000478    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_3   0x0004b0    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                  ID_3_V2   0x0004f4    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 ID_4_SUP   0x000536    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 ID_4_INF   0x000576    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_5   0x0005bc    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_6   0x000610    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_7   0x000698    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_8   0x000732    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                     ID_9   0x00079c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    ID_10   0x00081a    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    ID_11   0x00087c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    ID_12   0x0008f8    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    ID_13   0x000982    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    ID_14   0x0009de    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                    ID_15   0x000a4c    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                CINC_NOPS   0x000aac    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 SET_NOPS   0x000ab0    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 NOU_NOPS   0x000ab8    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 DEU_NOPS   0x000abe    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+                 N17_NOPS   0x000ac6    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+               FORTY_NOPS   0x000ace    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+               DOTZE_NOPS   0x000ae2    program     static D:\ALEX\TERCER\assembler\walkie-asm\Walkie-asm.X\main.asm
+
+
