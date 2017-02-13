@@ -1,4 +1,4 @@
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE  1
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -20,1389 +20,186 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00004 ;******************
                       00005 ;* CONFIGURACIONS *
                       00006 ;******************
-                      00007     CONFIG OSC = HSPLL      
+                      00007     CONFIG OSC = HSPLL          
                       00008     CONFIG PBADEN = DIG
                       00009     CONFIG WDT = OFF
                       00010 
                       00011 ;*************
                       00012 ;* VARIABLES *
                       00013 ;*************
-Warning[207]: Found label after column 1. (N_LINE_H)
-  00000000            00014     N_LINE_H EQU 0x00   ;NÚMERO DE LÍNIES HIGH
-Warning[207]: Found label after column 1. (N_LINE_L)
-  00000001            00015     N_LINE_L EQU 0x01   ;NÚMERO DE LÍNIES LOW
-Warning[207]: Found label after column 1. (COLOR)
-  00000002            00016     COLOR EQU 0x02      ;COLOR DEL DIBUIX. USUALMENT SERÀ BLANC, VERD O VERMELL
-Warning[207]: Found label after column 1. (ERRORS)
-  00000003            00017     ERRORS EQU 0x03     ;NOMBRE D'ERRORS. S'EXTREU DEL PORT D
-                      00018     
-                      00019 ;*************
-                      00020 ;* CONSTANTS *
+                      00014 
+  00000000            00015 SIZEH EQU 0x00
+  00000001            00016 SIZEL EQU 0x01
+  00000002            00017 LOADED EQU 0x02
+  00000003            00018 SENT EQU 0x03
+  00000004            00019 WORD EQU 0x04
+                      00020 
                       00021 ;*************
-Warning[207]: Found label after column 1. (BLACK)
-  00000000            00022     BLACK EQU 0x00      ;CONSTANTS AMB EL VALOR RGB DEL COLOR QUE REPRESENTEN
-Warning[207]: Found label after column 1. (RED)
-  00000001            00023     RED EQU 0x01
-Warning[207]: Found label after column 1. (GREEN)
-  00000002            00024     GREEN EQU 0x02
-Warning[207]: Found label after column 1. (YELLOW)
-  00000003            00025     YELLOW EQU 0x03
-Warning[207]: Found label after column 1. (BLUE)
-  00000004            00026     BLUE EQU 0x04
-Warning[207]: Found label after column 1. (PINK)
-  00000005            00027     PINK EQU 0x05
-Warning[207]: Found label after column 1. (CYAN)
-  00000006            00028     CYAN EQU 0x06
-Warning[207]: Found label after column 1. (WHITE)
-  00000007            00029     WHITE EQU 0x07
-                      00030 
-                      00031 ;*********************************
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE  2
+                      00022 ;* CONSTANTS *
+                      00023 ;*************
+  00000000            00024 INIT_FSR0H EQU 0x00
+  00000080            00025 INIT_FSR0L EQU 0x80
+  000000FF            00026 LOAD_CONST EQU 0xFF
+  000000FF            00027 SEND_BYTE EQU 0xFF
+  000000FF            00028 END_BYTE EQU 0xFF
+                      00029 
+                      00030 ;*********************************
+                      00031 ; VECTORS DE RESET I INTERRUPCIÓ *
+                      00032 ;*********************************
+                      00033     ORG 0x000000
+000000                00034 RESET_VECTOR
+000000 EF?? F???      00035     goto MAIN           
+                      00036 
+                      00037     ORG 0x000008
+000008                00038 HI_INT_VECTOR
+000008 EF?? F???      00039     goto HIGH_INT       
+                      00040 
+                      00041     ORG 0x000018
+000018                00042 LOW_INT_VECTOR
+000018 0011           00043     retfie FAST 
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00032 ; VECTORS DE RESET I INTERRUPCIÓ *
-                      00033 ;*********************************
-                      00034     ORG 0x000000
-000000                00035 RESET_VECTOR
-000000 EF?? F???      00036     goto MAIN
-                      00037 
-                      00038     ORG 0x000008
-000008                00039 HI_INT_VECTOR
-000008 EF?? F???      00040     goto HIGH_INT
-                      00041 
-                      00042     ORG 0x000018
-000018                00043 LOW_INT_VECTOR
-000018 EF?? F???      00044     goto LOW_INT
-                      00045 
-                      00046 ;***********************************
-                      00047 ;* RUTINES DE SERVEI D'INTERRUPCIÓ *
-                      00048 ;***********************************
-00001C                00049 HIGH_INT    
-00001C EC?? F???      00050     call INIT_TMR   ;ACTIVEM DE NOU LA INTERRUPCIÓ
-000020 0E00           00051     movlw 0x00
-000022 6200           00052     cpfseq N_LINE_H ;SI LA PART SUPERIOR VAL 0 HI HA LA POSSIBILITAT D'HAVER D'ACTIVAR EL SINCRONISME VE
-                            RTICAL
-000024 EF?? F???      00053     goto HSYNC_1    ;SI NOMÉS S'HA D'ACTIVAR EL SINCRONISME HORITZONTAL
-000028 0E01           00054     movlw 0x01
-00002A 6201           00055     cpfseq N_LINE_L
-00002C 928D           00056     bcf LATE, 1, 0  ;SI ESTEM A LA PRIMERA LÍNIA NO ENS INTERESSA BAIXAR EL SINCRONISME VERTICAL
-00002E 0E01           00057     movlw 0x01
-000030 6401           00058     cpfsgt N_LINE_L, 0
-000032 828D           00059     bsf LATE, 1, 0  ;SI N_LINE ÉS 0 o 1 S'ACTIVEN ELS DOS SINCRONISMES
-000034 808D           00060     bsf LATE, 0, 0  ;SI N_LINE ÉS MÉS GRAN NOMÉS S'ACTIVA EL SINCRONISME HORITZONTAL
-000036 0000           00061     NOP
-                      00062     
-000038                00063 COUNT_LINE
-000038 2A01           00064     incf N_LINE_L, 1, 0 ;SEMPRE AUGMENTEM LA PART INFERIOR DEL COMPTADOR
-00003A B0D8           00065     btfsc STATUS, C, 0  ;I SI DESPRÉS DE L'OPERACIÓ INCF ELS BITS DE CARRY O OVERFLOW ESTAN ACTIUS
-00003C 2A00           00066     incf N_LINE_H, 1, 0 ;VOL DIR QUE HEM FET UNA VOLTA SENCERA I HEM D'AUGMENTAR LA PART SUPERIOR DEL CO
-                            MPTADOR
-00003E 0E02           00067     movlw 0x02      ;ARA TOCA SABER SI S'HA DE REINICIAR EL COMPTADOR O ÚNICAMENT BAIXAR ELS SINCRONISM
-                            ES ACTIUS
-000040 6200           00068     cpfseq N_LINE_H     
-000042 EF?? F???      00069     goto STOP_SIGNAL_1  ;SI N_LINE VAL 0x0000 O 0x01FF NOMÉS BAIXEM ELS SINCRONISMES
-000046 0E0D           00070     movlw 0x0D
-000048 6201           00071     cpfseq N_LINE_L
-00004A EF?? F???      00072     goto STOP_SIGNAL_2  ;SI N_LINE VAL ENTRE 0x0200 I 0x020C NOMÉS BAIXEM ELS SINCRONISMES
-00004E 0000           00073     NOP
-000050 6A00           00074     clrf N_LINE_H
-000052 6A01           00075     clrf N_LINE_L
-000054 EF?? F???      00076     goto STOP_SIGNAL_3  ;SI N_LINE VAL 0x020D HEM REINICIAT EL COMPTADOR DE LÍNIES
-                      00077     
-000058                00078 HSYNC_1
-000058 0000           00079     NOP             ;ACTIVEM EL SENYAL DE SINCRONISME HORITZONTAL I ANEM A INCREMENTAR EL COMPTADOR DE L
-                            ÍNIES
-00005A EC?? F???      00080     call CINC_NOPS
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE  3
+                      00044 
+                      00045 ;***********************************
+                      00046 ;* RUTINES DE SERVEI D'INTERRUPCIÓ *
+                      00047 ;***********************************
+00001A                00048 HIGH_INT
+                      00049     ;codi de interrupció
+00001A 0011           00050     retfie FAST
+                      00051 
+                      00052 ;*********
+                      00053 ;* INITS *
+                      00054 ;*********
+                      00055         
+00001C                00056 INIT_VARS
+00001C 6A00           00057     clrf SIZEH, 0
+00001E 6A01           00058     clrf SIZEL, 0
+000020 0012           00059     return
+                      00060         
+000022                00061 INIT_PORTS
+000022 8E94           00062     bsf TRISC, 7, 0
+000024 8C94           00063     bsf TRISC, 6, 0
+000026 8294           00064     bsf TRISC, 1, 0
+000028 8094           00065     bsf TRISC, 0, 0
+00002A 9293           00066     bcf TRISB, 1, 0
+00002C 9093           00067     bcf TRISB, 0, 0
+00002E 6A95           00068     clrf TRISD, 0
+000030 0012           00069     return
+                      00070     
+000032                00071 INIT_INTS
+000032 9ED0           00072     bcf RCON, IPEN, 0
+000034 0EA0           00073     movlw 0xA0
+000036 6EF2           00074     movwf INTCON, 0
+000038 0E88           00075     movlw 0x88
+00003A 6ED5           00076     movwf T0CON, 0
+00003C 0E26           00077     movlw 0x26
+00003E 6EAC           00078     movwf TXSTA, 0
+000040 0E90           00079     movlw 0x90
+000042 6EAB           00080     movwf RCSTA, 0
+000044 6AB8           00081     clrf BAUDCON, 0
+000046 0E81           00082     movlw 0x81
+000048 6EAF           00083     movwf SPBRG, 0
+00004A 0012           00084     return
+                      00085     
+00004C                00086 INIT_TMR
+00004C 0E3C           00087     movlw 0x3C
+00004E 6ED7           00088     movwf TMR0H, 0
+000050 0EB0           00089     movlw 0xB0
+000052 6ED6           00090     movwf TMR0L, 0
+000054 94F2           00091     bcf INTCON, TMR0IF
+000056 0012           00092     return
+                      00093         
+                      00094 ;********
+                      00095 ;* MAIN *
+                      00096 ;********
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-00005E 808D           00081     bsf LATE, 0, 0
-000060 EF?? F???      00082     goto COUNT_LINE
-                      00083     
-000064                00084 STOP_SIGNAL_1
-000064 0E00           00085     movlw 0x00          ;A CONTINUACIÓ VENEN UN SEGUIT DE NOPS PER A IGUALAR EL TEMPS EN PRENDRE CADASC
-                            UN DELS CAMINS
-000066 6200           00086     cpfseq N_LINE_H     ;PER A APAGAR EL SENYAL DE SINCRONISME HORITZONTAL UN COP HAGI PASSAT EL TEMPS C
-                            ORRECTE
-000068 EF?? F???      00087     goto STOP_SIGNAL_11
-00006C EF?? F???      00088     goto STOP_SIGNAL_10
-                      00089 
-000070                00090 STOP_SIGNAL_11
-000070 EC?? F???      00091     call CINC_NOPS
-000074 EC?? F???      00092     call NOU_NOPS
-000078 EC?? F???      00093     call NOU_NOPS
-00007C EF?? F???      00094     goto STOP_SIGNAL
-                      00095     
-000080                00096 STOP_SIGNAL_10
-000080 EC?? F???      00097     call NOU_NOPS
-000084 EC?? F???      00098     call DOTZE_NOPS
-000088 EF?? F???      00099     goto STOP_SIGNAL
-                      00100 
-00008C                00101 STOP_SIGNAL_2
-00008C EC?? F???      00102     call DEU_NOPS
-000090 EC?? F???      00103     call SET_NOPS
-000094 EF?? F???      00104     goto STOP_SIGNAL
-                      00105     
-000098                00106 STOP_SIGNAL_3
-000098 EC?? F???      00107     call DEU_NOPS
-00009C EC?? F???      00108     call DOTZE_NOPS
-                      00109     
-0000A0                00110 STOP_SIGNAL
-0000A0 908D           00111     bcf LATE, 0, 0
-0000A2 0011           00112     retfie FAST     ;FI DE LA INTERRUPCIÓ
-                      00113 
-0000A4                00114 LOW_INT
-0000A4 0011           00115     retfie FAST
-                      00116     
-                      00117 ;*********
-                      00118 ;* INITS *
-                      00119 ;*********
-0000A6                00120 INIT_PORTS          ;CONFIGURACIÓ DE I/O DELS BITS DELS PORTS
-0000A6 9092           00121     bcf TRISA, 0, 0 ;RED
-0000A8 9292           00122     bcf TRISA, 1, 0 ;GREEN
-0000AA 9492           00123     bcf TRISA, 2, 0 ;BLUE
-0000AC 9096           00124     bcf TRISE, 0, 0 ;HSYNC
-0000AE 9296           00125     bcf TRISE, 1, 0 ;VSYNC
-0000B0 8095           00126     bsf TRISD, 0, 0 ;NUMERRORS[0]
-0000B2 8295           00127     bsf TRISD, 1, 0 ;NUMERRORS[1]
-0000B4 8495           00128     bsf TRISD, 2, 0 ;NUMERRORS[2]
-0000B6 8695           00129     bsf TRISD, 3, 0 ;NUMERRORS[3]
-0000B8 8895           00130     bsf TRISD, 4, 0 ;PARTIDAGUANYADA
-0000BA 8A95           00131     bsf TRISD, 5, 0 ;GAMEOVER
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE  4
+                      00097 
+000058                00098 MAIN
+000058 EC?? F???      00099     call INIT_VARS
+00005C EC?? F???      00100     call INIT_PORTS
+000060 EC?? F???      00101     call INIT_INTS
+000064 EC?? F???      00102     call INIT_TMR
+                      00103         
+000068                00104 BUCLE
+000068 BA9E           00105     btfsc PIR1, RCIF, 0
+00006A EF?? F???      00106     goto RX_PC
+                      00107         
+00006E                00108 CHECK_LOAD_BTN
+00006E B282           00109     btfsc PORTC, 1, 0
+000070 EF?? F???      00110     goto LOAD_BTN
+000074 6A02           00111     clrf LOADED, 0
+                      00112     
+000076                00113 CHECK_SEND_BTN
+000076 B082           00114     btfsc PORTC, 0, 0
+000078 EF?? F???      00115     goto SEND_BTN
+00007C 6A03           00116     clrf SENT, 0
+00007E EF?? F???      00117     goto BUCLE  ;AQUÍ FALTA EL TRACTAMENT DELS LEDS
+                      00118     
+000082                00119 RX_PC
+000082 CFAE F004      00120     movff RCREG, WORD
+000086 0EFF           00121     movlw LOAD_CONST
+000088 6204           00122     cpfseq WORD, 0
+00008A EF?? F???      00123     goto SEND_MESSAGE
+00008E EF?? F???      00124     goto LOAD_MESSAGE
+                      00125     
+000092                00126 SEND_BTN
+                      00127     
+000092                00128 SEND_MESSAGE
+                      00129     
+000092                00130 LOAD_BTN
+                      00131     
+000092                00132 LOAD_MESSAGE
+000092 0E00           00133     movlw INIT_FSR0H
+000094 6EEA           00134     movwf FSR0H, 0
+000096 0E80           00135     movlw INIT_FSR0L
+000098 6EE9           00136     movwf FSR0L, 0
+                      00137     
+00009A 6A00           00138     clrf SIZEH, 0
+00009C 6A01           00139     clrf SIZEL, 0
+                      00140     
+00009E 0EFF           00141     movlw SEND_BYTE
+0000A0 6EAD           00142     movwf TXREG, 0
+                      00143     
+0000A2                00144 READ_MESSAGE
+0000A2 AA9E           00145     btfss PIR1, RCIF, 0
+0000A4 EF?? F???      00146     goto $-2
+0000A8 CFAE F004      00147     movff RCREG, WORD
+                      00148     
+0000AC 0EFF           00149     movlw END_BYTE
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0000BC 0012           00132     return
-                      00133 
-0000BE                00134 INIT_INTS       ;INICIALITZACIÓ DE LES INTERRUPCIONS
-0000BE 9ED0           00135     bcf RCON, IPEN, 0   ;DESABILITEM LES PRIORITATS DE LES INTERRUPCIONS
-0000C0 0EA0           00136     movlw 0xA0
-0000C2 6EF2           00137     movwf INTCON, 0     ;HABILITEM INTERRUPCIONS, HABILITEM EL BIT D'OVERFLOW DEL TMR0
-0000C4 0E88           00138     movlw 0x88
-0000C6 6ED5           00139     movwf T0CON, 0      ;HABILITEM TMR0, 16 BITS, SENSE PREESCALER
-0000C8 0012           00140     return
-                      00141     
-0000CA                00142 INIT_TMR            ;INICIALITZACIÓ DE LA INTERRUPCIÓ DEL TMR0
-0000CA 0EFE           00143     movlw 0xFE      ;ESCRIVIM EL VALOR 0xFECF, COSA QUE IMPLICA QUE SALTARÀ LA INTERRUPCIÓ EN 0x0130 (
-                            o 304d)
-0000CC 6ED7           00144     movwf TMR0H, 0
-0000CE 0ECF           00145     movlw 0xCF
-0000D0 6ED6           00146     movwf TMR0L, 0
-0000D2 94F2           00147     bcf INTCON, TMR0IF, 0   ;DESACTIVEM EL BIT D'INTERRUPCIÓ DE TMR0
-0000D4 0012           00148     return
-                      00149     
-0000D6                00150 INIT_VARS               ;INICIALITZACIÓ DE LES VARIABLES
-0000D6 6A00           00151     clrf N_LINE_H, 0    ;PARTIM DE LA LÍNIA 0
-0000D8 6A01           00152     clrf N_LINE_L, 0
-0000DA 9089           00153     bcf LATA, 0, 0      ;MOSTREM EL COLOR NEGRE
-0000DC 9289           00154     bcf LATA, 1, 0
-0000DE 9489           00155     bcf LATA, 2, 0
-0000E0 0E07           00156     movlw WHITE         ;COMENCEM AMB EL NINOT DE COLOR BLANC
-0000E2 6E02           00157     movwf COLOR, 0  
-0000E4 6A03           00158     clrf ERRORS, 0      ;I CAP ERROR
-0000E6 0012           00159     return
-                      00160     
-                      00161 ;********
-                      00162 ;* MAIN *
-                      00163 ;********
-0000E8                00164 MAIN        ;COMENCEM CRIDANT TOTES LES INICIALITZACIONS I PASSEM A UN BUCLE INFINIT
-0000E8 EC?? F???      00165     call INIT_VARS
-0000EC EC?? F???      00166     call INIT_PORTS
-0000F0 EC?? F???      00167     call INIT_INTS
-0000F4 EC?? F???      00168     call INIT_TMR
-                      00169     
-0000F8                00170 BUCLE       ;BUCLE INFINIT, ESTAREM MIRANT LA LÍNIA PER LA QUE ANEM TOTA L'ESTONA PER SABER COM S'HA D'
-                            ACTUAR
-0000F8 0E00           00171     movlw 0x00          ;SI N_LINE VAL 0x0100 O MÉS ÉS IMPOSSIBLE QUE ESTIGUEM PER SOBRE DEL LÍMIT SU
-                            PERIOR DE LA PANTALLA
-0000FA 6200           00172     cpfseq N_LINE_H
-0000FC EF?? F???      00173     goto NEXT_IF        ;ANEM A COMPROVAR SI ESTEM PER SOTA DEL LÍMIT INFERIOR DE LA PANTALLA
-000100 0E23           00174     movlw 0x23
-000102 6401           00175     cpfsgt N_LINE_L
-000104 EF?? F???      00176     goto BUCLE          ;ESTEM PER SOBRE DEL LÍMIT SUPERIOR DE LA PANTALLA
-000108 EF?? F???      00177     goto PINTA          ;ESTEM A LA PART DE LA PANTALLA ON PODEM PINTAR
-                      00178     
-00010C                00179 NEXT_IF
-00010C 0E02           00180     movlw 0x02          ;SI N_LINE VAL MENYS DE 0x0200 ÉS IMPOSSIBLE QUE ESTIGUEM PER SOTA DEL LÍMIT I
-                            NFERIOR DE LA PANTALLA
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE  5
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-00010E 6200           00181     cpfseq N_LINE_H
-000110 EF?? F???      00182     goto PINTA          ;ESTEM A LA PART DE LA PANTALLA ON PODEM PINTAR
-000114 0E03           00183     movlw 0x03
-000116 6001           00184     cpfslt N_LINE_L
-000118 EF?? F???      00185     goto BUCLE          ;ESTEM PER SOTA DEL LÍMIT INFERIOR DE LA PANTALLA
-00011C EF?? F???      00186     goto PINTA          ;ESTEM A LA PART DE LA PANTALLA ON PODEM PINTAR
-                      00187     
-                      00188     ;ESTEM A LA PART DE LA PANTALLA ON PODEM PINTAR, ARA TOCA SABER A QUINA DE LES PARTS. SI ANÈSSIM CO
-                            MPARANT
-                      00189     ;SEQÜENCIALMENT TOTS ELS VALORS POSSIBLES, QUAN ARRIBÉSSIM A L'ÚLTIM TRAM POSSIBLE JA NO EL PODR�
-                            �EM DIBUIXAR
-                      00190     ;PERQUÈ SE'NS HAURIA PASSAT EL TEMPS DE DIBUIX O ESTARIEM MOLT DESPLAÇATS, AIXÍ QUE MIREM LA PART
-                             SUPERIOR
-                      00191     ;DE LA VARIABLE I NO HEM DE FER TANTES COMPARACIONS. A MÉS A MÉS, TAMBÉ HEM D'ACONSEGUIR QUE ES T
-                            RIGUI EL MATEIX
-                      00192     ;EN ARRIBAR A LA PART DE PINTAR LA PANTALLA PER TOTS ELS CAMINS DE LES COMPROVACIONS, TANT SI ÉS EL
-                             PRIMER TRAM DE
-                      00193     ;LA PART SUPERIOR DE LA PANTALLA COM L'ÚLTIM DE LA PART INFERIOR.
-000120                00194 PINTA
-000120 0E00           00195     movlw 0x00
-000122 6200           00196     cpfseq N_LINE_H 
-000124 EF?? F???      00197     goto PART_INFERIOR  ;ESTEM A LA PART INFERIOR DE LA PANTALLA
-                      00198     
-000128                00199 PART_SUPERIOR           ;ESTEM A LA PART SUPERIOR DE LA PANTALLA
-000128 0E5F           00200     movlw 0x5F
-00012A 6401           00201     cpfsgt N_LINE_L
-00012C EF?? F???      00202     goto ID_0_SUP_20_NOPS   ;NO ÉS UN TRAM ON ES PINTI A LA PANTALLA (TRAM 0 DE LA PANTALLA)
-000130 0E69           00203     movlw 0x69
-000132 6401           00204     cpfsgt N_LINE_L
-000134 EF?? F???      00205     goto TRAM_1         ;TRAM 1 DE LA PANTALLA
-000138 0E91           00206     movlw 0x91
-00013A 6401           00207     cpfsgt N_LINE_L
-00013C EF?? F???      00208     goto TRAM_2         ;TRAM 2 DE LA PANTALLA
-000140 0EB9           00209     movlw 0xB9
-000142 6401           00210     cpfsgt N_LINE_L
-000144 EF?? F???      00211     goto TRAM_3         ;TRAM 3 DE LA PANTALLA
-000148 0ECD           00212     movlw 0xCD
-00014A 6401           00213     cpfsgt N_LINE_L
-00014C EF?? F???      00214     goto TRAM_4         ;TRAM 4 DE LA PANTALLA
-000150 0ED7           00215     movlw 0xD7
-000152 6401           00216     cpfsgt N_LINE_L
-000154 EF?? F???      00217     goto TRAM_5         ;TRAM 5 DE LA PANTALLA
-000158 EF?? F???      00218     goto TRAM_6         ;TRAM 6 DE LA PANTALLA
-                      00219     
-00015C                00220 PART_INFERIOR
-00015C 0E01           00221     movlw 0x01
-00015E 6200           00222     cpfseq N_LINE_H
-000160 EF?? F???      00223     goto ID_0_INF_25_NOPS   ;NO ÉS UN TRAM ON ES PINTI A LA PANTALLA (TRAM 16 DE LA PANTALLA)
-000164 0E09           00224     movlw 0x09
-000166 6401           00225     cpfsgt N_LINE_L
-000168 EF?? F???      00226     goto TRAM_7         ;TRAM 7 DE LA PANTALLA
-00016C 0E31           00227     movlw 0x31
-00016E 6401           00228     cpfsgt N_LINE_L
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE  6
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000170 EF?? F???      00229     goto TRAM_8         ;TRAM 8 DE LA PANTALLA
-000174 0E59           00230     movlw 0x59
-000176 6401           00231     cpfsgt N_LINE_L
-000178 EF?? F???      00232     goto TRAM_9         ;TRAM 9 DE LA PANTALLA
-00017C 0E63           00233     movlw 0x63
-00017E 6401           00234     cpfsgt N_LINE_L
-000180 EF?? F???      00235     goto TRAM_10        ;TRAM 10 DE LA PANTALLA
-000184 0E8B           00236     movlw 0x8B
-000186 6401           00237     cpfsgt N_LINE_L
-000188 EF?? F???      00238     goto TRAM_11        ;TRAM 11 DE LA PANTALLA
-00018C 0E95           00239     movlw 0x95
-00018E 6401           00240     cpfsgt N_LINE_L
-000190 EF?? F???      00241     goto TRAM_12        ;TRAM 12 DE LA PANTALLA
-000194 0EBD           00242     movlw 0xBD
-000196 6401           00243     cpfsgt N_LINE_L
-000198 EF?? F???      00244     goto TRAM_13        ;TRAM 13 DE LA PANTALLA
-00019C 0EC7           00245     movlw 0xC7
-00019E 6401           00246     cpfsgt N_LINE_L
-0001A0 EF?? F???      00247     goto TRAM_14        ;TRAM 14 DE LA PANTALLA
-0001A4 0000           00248     NOP
-0001A6 0000           00249     NOP
-0001A8 EF?? F???      00250     goto ID_0_INF       ;NO ÉS UN TRAM ON ES PINTI A LA PANTALLA (TRAM 15 DE LA PANTALLA)
-                      00251     
-                      00252     ;A CADA TRAM DE LA PANTALLA NOMÉS HI PODEN HAVER UNES POQUES LÍNIES CONCRETES DIBUIXADES. AQUESTS 
-                            DIFERENTS MODELS HAN ESTAT
-                      00253     ;DIBUIXATS I CLASSIFICATS EN ELS CONJUNTS D'INSTRUCCIONS ANOMENTATS ID{0..14}. SEGONS EL NOMBRE D'ER
-                            RORS CADASCUN DELS TRAMS
-                      00254     ;UTILITZARÀ UN CONJUNT O ALTRE D'INSTRUCCIONS.
-                      00255     
-0001AC                00256 TRAM_1
-0001AC 0E01           00257     movlw 0x01
-0001AE 6403           00258     cpfsgt ERRORS
-0001B0 EF?? F???      00259     goto ID_0_SUP_13_NOPS
-0001B4 EC?? F???      00260     call SET_NOPS
-0001B8 EF?? F???      00261     goto ID_1
-                      00262     
-0001BC                00263 TRAM_2
-0001BC 0E00           00264     movlw 0x00
-0001BE 6403           00265     cpfsgt ERRORS
-0001C0 EF?? F???      00266     goto ID_0_SUP_10_NOPS
-0001C4 0E02           00267     movlw 0x02
-0001C6 6403           00268     cpfsgt ERRORS
-0001C8 EF?? F???      00269     goto ID_2_SUP_10_NOPS
-0001CC EC?? F???      00270     call DEU_NOPS
-0001D0 EC?? F???      00271     call CINC_NOPS
-0001D4 EF?? F???      00272     goto ID_3
-                      00273     
-0001D8                00274 TRAM_3
-0001D8 0E00           00275     movlw 0x00
-0001DA 6403           00276     cpfsgt ERRORS
-0001DC EF?? F???      00277     goto ID_0_SUP_7_NOPS
-0001E0 0E03           00278     movlw 0x03
-0001E2 6403           00279     cpfsgt ERRORS
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE  7
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-0001E4 EF?? F???      00280     goto ID_2_SUP_7_NOPS
-0001E8 EC?? F???      00281     call DOTZE_NOPS
-0001EC 0000           00282     NOP
-0001EE EF?? F???      00283     goto ID_4_SUP
-                      00284 
-0001F2                00285 TRAM_4
-0001F2 0E00           00286     movlw 0x00
-0001F4 6403           00287     cpfsgt ERRORS
-0001F6 EF?? F???      00288     goto ID_0_SUP_4_NOPS
-0001FA 0E04           00289     movlw 0x04
-0001FC 6403           00290     cpfsgt ERRORS
-0001FE EF?? F???      00291     goto ID_2_SUP_4_NOPS
-000202 EC?? F???      00292     call SET_NOPS
-000206 EF?? F???      00293     goto ID_3
-                      00294 
-00020A                00295 TRAM_5
-00020A 0E00           00296     movlw 0x00
-00020C 0000           00297     NOP
-00020E 6403           00298     cpfsgt ERRORS
-000210 EF?? F???      00299     goto ID_0_SUP_0_NOPS
-000214 0E04           00300     movlw 0x04
-000216 6403           00301     cpfsgt ERRORS
-000218 EF?? F???      00302     goto ID_2_SUP
-00021C 0E05           00303     movlw 0x05
-00021E 6403           00304     cpfsgt ERRORS
-000220 EF?? F???      00305     goto ID_3
-000224 EF?? F???      00306     goto ID_4_SUP
-                      00307     
-000228                00308 TRAM_6
-000228 0E00           00309     movlw 0x00
-00022A 6403           00310     cpfsgt ERRORS
-00022C EF?? F???      00311     goto ID_0_SUP
-000230 0E04           00312     movlw 0x04
-000232 6403           00313     cpfsgt ERRORS
-000234 EF?? F???      00314     goto ID_2_SUP_V2
-000238 0000           00315     NOP
-00023A 0000           00316     NOP
-00023C EF?? F???      00317     goto ID_3_V2
-                      00318 
-000240                00319 TRAM_7
-000240 0E00           00320     movlw 0x00
-000242 6403           00321     cpfsgt ERRORS
-000244 EF?? F???      00322     goto ID_0_INF_18_NOPS
-000248 0E06           00323     movlw 0x06
-00024A 6403           00324     cpfsgt ERRORS
-00024C EF?? F???      00325     goto ID_2_INF_4_NOPS
-000250 0000           00326     NOP
-000252 EF?? F???      00327     goto ID_4_INF
-                      00328 
-000256                00329 TRAM_8
-000256 0E00           00330     movlw 0x00
-000258 6403           00331     cpfsgt ERRORS
-00025A EF?? F???      00332     goto ID_0_INF_15_NOPS
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE  8
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-00025E 0E07           00333     movlw 0x07
-000260 0000           00334     NOP
-000262 6403           00335     cpfsgt ERRORS
-000264 EF?? F???      00336     goto ID_2_INF_3_NOPS
-000268 EF?? F???      00337     goto ID_5
-                      00338 
-00026C                00339 TRAM_9
-00026C 0E00           00340     movlw 0x00
-00026E 6403           00341     cpfsgt ERRORS
-000270 EF?? F???      00342     goto ID_0_INF_12_NOPS
-000274 0000           00343     NOP
-000276 EF?? F???      00344     goto ID_2_INF
-                      00345     
-00027A                00346 TRAM_10
-00027A 0E00           00347     movlw 0x00
-00027C 6403           00348     cpfsgt ERRORS
-00027E EF?? F???      00349     goto ID_11
-000282 0000           00350     NOP
-000284 EF?? F???      00351     goto ID_6
-                      00352 
-000288                00353 TRAM_11
-000288 0E00           00354     movlw 0x00
-00028A 6403           00355     cpfsgt ERRORS
-00028C EF?? F???      00356     goto ID_12
-000290 EF?? F???      00357     goto ID_7
-                      00358 
-000294                00359 TRAM_12
-000294 0E00           00360     movlw 0x00
-000296 6403           00361     cpfsgt ERRORS
-000298 EF?? F???      00362     goto ID_13
-00029C EF?? F???      00363     goto ID_8
-                      00364 
-0002A0                00365 TRAM_13
-0002A0 0E00           00366     movlw 0x00
-0002A2 6403           00367     cpfsgt ERRORS
-0002A4 EF?? F???      00368     goto ID_14
-0002A8 EF?? F???      00369     goto ID_9
-                      00370 
-0002AC                00371 TRAM_14
-0002AC 0E00           00372     movlw 0x00
-0002AE 6403           00373     cpfsgt ERRORS
-0002B0 EF?? F???      00374     goto ID_15
-0002B4 EF?? F???      00375     goto ID_10
-                      00376     
-0002B8                00377 ID_0_SUP_0_NOPS
-0002B8 EF?? F???      00378     goto ID_0_SUP
-                      00379     
-0002BC                00380 ID_0_SUP_4_NOPS
-0002BC EC?? F???      00381     call CINC_NOPS
-0002C0 EF?? F???      00382     goto ID_0_SUP
-                      00383     
-0002C4                00384 ID_0_SUP_7_NOPS
-0002C4 EC?? F???      00385     call SET_NOPS
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE  9
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-0002C8 0000           00386     NOP
-0002CA EF?? F???      00387     goto ID_0_SUP
-                      00388 
-0002CE                00389 ID_0_SUP_10_NOPS
-0002CE EC?? F???      00390     call DOTZE_NOPS
-0002D2 EF?? F???      00391     goto ID_0_SUP
-                      00392     
-0002D6                00393 ID_0_SUP_13_NOPS
-0002D6 EC?? F???      00394     call DEU_NOPS
-0002DA EC?? F???      00395     call CINC_NOPS
-0002DE 0000           00396     NOP
-0002E0 EF?? F???      00397     goto ID_0_SUP
-                      00398     
-0002E4                00399 ID_0_SUP_20_NOPS
-0002E4 EC?? F???      00400     call DOTZE_NOPS
-0002E8 EC?? F???      00401     call DOTZE_NOPS
-0002EC EF?? F???      00402     goto ID_0_SUP
-                      00403 
-0002F0                00404 ID_0_INF_12_NOPS
-0002F0 EC?? F???      00405     call DEU_NOPS
-0002F4 EC?? F???      00406     call NOU_NOPS
-0002F8 EF?? F???      00407     goto ID_0_INF
-                      00408     
-0002FC                00409 ID_0_INF_15_NOPS
-0002FC EC?? F???      00410     call DOTZE_NOPS
-000300 EC?? F???      00411     call DEU_NOPS
-000304 EF?? F???      00412     goto ID_0_INF
-                      00413     
-000308                00414 ID_0_INF_18_NOPS
-000308 EC?? F???      00415     call DOTZE_NOPS
-00030C EC?? F???      00416     call CINC_NOPS
-000310 EC?? F???      00417     call NOU_NOPS
-000314 EF?? F???      00418     goto ID_0_INF
-                      00419         
-000318                00420 ID_0_INF_25_NOPS
-000318 EC?? F???      00421     call DOTZE_NOPS
-00031C EC?? F???      00422     call DOTZE_NOPS
-000320 EC?? F???      00423     call DEU_NOPS
-000324 EF?? F???      00424     goto ID_0_INF
-                      00425     
-000328                00426 ID_2_SUP_3_NOPS
-000328 EF?? F???      00427     goto ID_2_SUP
-                      00428     
-00032C                00429 ID_2_SUP_4_NOPS
-00032C 0000           00430     NOP
-00032E 0000           00431     NOP
-000330 0000           00432     NOP
-000332 EF?? F???      00433     goto ID_2_SUP
-                      00434     
-000336                00435 ID_2_SUP_7_NOPS
-000336 EC?? F???      00436     call SET_NOPS
-00033A EF?? F???      00437     goto ID_2_SUP
-                      00438     
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 10
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-00033E                00439 ID_2_SUP_10_NOPS
-00033E EC?? F???      00440     call DEU_NOPS
-000342 0000           00441     NOP
-000344 EF?? F???      00442     goto ID_2_SUP
-                      00443     
-000348                00444 ID_2_INF_3_NOPS
-000348 EF?? F???      00445     goto ID_2_INF
-                      00446     
-00034C                00447 ID_2_INF_4_NOPS
-00034C EC?? F???      00448     call CINC_NOPS
-000350 EF?? F???      00449     goto ID_2_INF
-                      00450     
-                      00451     ;DURANT ELS TRAMS QUE PINTEM UN TROS "EN BLANC" DE LA PART SUPERIOR DE LA PANTALLA, COM QUE ES TRACT
-                            A DE MOLTES INSTRUCCIONS
-                      00452     ;DE NO FER RES, APROFITEM AQUEST TEMPS PER A REALITZAR LA COMPROVACIÓ DELS ERRORS DE LA PARTIDA I E
-                            LS SENYALS DE VICTÒRIA I
-                      00453     ;DERROTA. AIXÍ QUE AFEGIM UN CODI QUE RECULL EL VALOR DEL NOMBRE D'ERRORS DEL PORT D I EL GUARDA A 
-                            LA NOSTRA VARIABLE,
-                      00454     ;MIRA SI S'HA GUANYAT LA PARTIDA, CAS EN EL QUE ES FICARÀ LA VARIABLE COLOR AMB EL VALOR DE LA CONS
-                            TANT "GREEN" I ES MIRA EL 
-                      00455     ;SENYAL DE DERROTA, CAS EN EL QUE ES FICARÀ LA VARIABLE COLOR AMB EL VALOR DE LA CONSTANT "RED".
-                      00456     
-000354                00457 ID_0_SUP
-000354 EC?? F???      00458     call FORTY_NOPS
-000358 EC?? F???      00459     call FORTY_NOPS
-00035C EC?? F???      00460     call FORTY_NOPS
-000360 EC?? F???      00461     call FORTY_NOPS
-000364 0000           00462     NOP
-000366 0000           00463     NOP
-                      00464     
-000368                00465 DECISION
-000368 CF83 F003      00466     movff PORTD, ERRORS ;ES RECULL EL VALOR DEL PORT D
-00036C 0E0F           00467     movlw 0x0F
-00036E 1603           00468     andwf ERRORS, 1, 0  ;I HI APLIQUEM UNA MÀSCARA PER A NETEJAR ELS BITS DEL PORT QUE NO CONTENEN EL S
-                            ENYAL NUMERRORS[3..0]
-000370 B883           00469     btfsc PORTD, 4, 0
-000372 EF?? F???      00470     goto VICTORY        ;EL SENYAL DE VICTÒRIA ESTÀ ACTIU
-000376 BA83           00471     btfsc PORTD, 5, 0
-000378 EF?? F???      00472     goto DEFEAT         ;EL SENYAL DE DERROTA ESTÀ ACTIU
-00037C 0000           00473     NOP
-00037E EF?? F???      00474     goto ID_0_SUP_CONT  ;HEM ACTUALITZAT EL NOMBRE D'ERRORS I NO HI HA CAP SENYAL ACTIU
-                      00475     
-000382                00476 VICTORY             ;SI ES TRACTA D'UNA VICTÒRIA, EL VALOR DE LA VARIABLE COLOR PASSA A SER "GREEN".
-000382 0E02           00477     movlw GREEN     ;D'AQUESTA MANERA, COM QUE PINTEM EL NINOT EN FUNCIÓ D'AQUESTA VARIABLE, A PARTIR D
-                            'ARA ES PINTARÀ
-000384 6E02           00478     movwf COLOR, 0  ;DE COLOR VERD
-000386 0000           00479     NOP
-000388 0000           00480     NOP
-00038A EF?? F???      00481     goto ID_0_SUP_CONT
-                      00482     
-00038E                00483 DEFEAT              ;SI ES TRACTA D'UNA DERROTA, EL VALOR DE LA VARIABLE COLOR PASSA A SER "RED".
-00038E 0E01           00484     movlw RED       ;D'AQUESTA MANERA, COM QUE PINTEM EL NINOT EN FUNCIÓ D'AQUESTA VARIABLE, A PARTIR D
-                            'ARA ES PINTARÀ
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 11
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000390 6E02           00485     movwf COLOR, 0  ;DE COLOR VERMELL
-000392 0000           00486     NOP
-                      00487     
-000394                00488 ID_0_SUP_CONT
-000394 EC?? F???      00489     call DOTZE_NOPS
-000398 EC?? F???      00490     call DOTZE_NOPS
-00039C EC?? F???      00491     call SET_NOPS
-0003A0 0000           00492     NOP
-0003A2 EF?? F???      00493     goto BUCLE
-                      00494     
-0003A6                00495 ID_0_INF
-0003A6 EC?? F???      00496     call FORTY_NOPS
-0003AA EC?? F???      00497     call FORTY_NOPS
-0003AE EC?? F???      00498     call FORTY_NOPS
-0003B2 EC?? F???      00499     call DOTZE_NOPS
-0003B6 EC?? F???      00500     call DOTZE_NOPS
-0003BA EC?? F???      00501     call DOTZE_NOPS
-0003BE EC?? F???      00502     call DOTZE_NOPS
-0003C2 EC?? F???      00503     call DEU_NOPS
-0003C6 EC?? F???      00504     call DEU_NOPS
-0003CA EC?? F???      00505     call DEU_NOPS
-0003CE EF?? F???      00506     goto BUCLE
-                      00507     
-0003D2                00508 ID_1
-0003D2 EC?? F???      00509     call DEU_NOPS
-0003D6 EC?? F???      00510     call DEU_NOPS
-0003DA EC?? F???      00511     call SET_NOPS
-0003DE 0000           00512     NOP
-0003E0 6E89           00513     movwf LATA, 0
-0003E2 EC?? F???      00514     call FORTY_NOPS
-0003E6 EC?? F???      00515     call FORTY_NOPS
-0003EA EC?? F???      00516     call DOTZE_NOPS
-0003EE EC?? F???      00517     call DOTZE_NOPS
-0003F2 0000           00518     NOP
-0003F4 0000           00519     NOP
-0003F6 0000           00520     NOP
-0003F8 6A89           00521     clrf LATA, 0
-0003FA EC?? F???      00522     call FORTY_NOPS
-0003FE EC?? F???      00523     call DOTZE_NOPS
-000402 EC?? F???      00524     call DOTZE_NOPS
-000406 EC?? F???      00525     call DOTZE_NOPS
-00040A 0000           00526     NOP
-00040C 0000           00527     NOP
-00040E 0000           00528     NOP
-000410 EF?? F???      00529     goto BUCLE
-                      00530 
-000414                00531 ID_2_SUP
-000414 EC?? F???      00532     call SET_NOPS
-000418 EC?? F???      00533     call SET_NOPS
-00041C 0000           00534     NOP
-00041E 0000           00535     NOP
-000420 6E89           00536     movwf LATA, 0
-000422 0000           00537     NOP
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 12
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000424 0000           00538     NOP
-000426 0000           00539     NOP
-000428 6A89           00540     clrf LATA, 0
-00042A EC?? F???      00541     call FORTY_NOPS
-00042E EC?? F???      00542     call FORTY_NOPS
-000432 EC?? F???      00543     call FORTY_NOPS
-000436 EC?? F???      00544     call FORTY_NOPS
-00043A EC?? F???      00545     call DOTZE_NOPS
-00043E EC?? F???      00546     call DEU_NOPS
-000442 0000           00547     NOP
-000444 EF?? F???      00548     goto BUCLE
-                      00549     
-000448                00550 ID_2_SUP_V2
-000448 EC?? F???      00551     call SET_NOPS
-00044C EC?? F???      00552     call SET_NOPS
-000450 0000           00553     NOP
-000452 6E89           00554     movwf LATA, 0
-000454 0000           00555     NOP
-000456 0000           00556     NOP
-000458 0000           00557     NOP
-00045A 6A89           00558     clrf LATA, 0
-00045C EC?? F???      00559     call FORTY_NOPS
-000460 EC?? F???      00560     call FORTY_NOPS
-000464 EC?? F???      00561     call FORTY_NOPS
-000468 EC?? F???      00562     call FORTY_NOPS
-00046C EC?? F???      00563     call DOTZE_NOPS
-000470 EC?? F???      00564     call DOTZE_NOPS
-000474 EF?? F???      00565     goto BUCLE
-                      00566     
-000478                00567 ID_2_INF
-000478 EC?? F???      00568     call SET_NOPS
-00047C EC?? F???      00569     call SET_NOPS
-000480 EC?? F???      00570     call CINC_NOPS
-000484 C002 FF89      00571     movff COLOR, LATA
-000488 0000           00572     NOP
-00048A 0000           00573     NOP
-00048C 0000           00574     NOP
-00048E 6A89           00575     clrf LATA, 0
-000490 EC?? F???      00576     call FORTY_NOPS
-000494 EC?? F???      00577     call FORTY_NOPS
-000498 EC?? F???      00578     call FORTY_NOPS
-00049C EC?? F???      00579     call FORTY_NOPS
-0004A0 EC?? F???      00580     call DEU_NOPS
-0004A4 EC?? F???      00581     call DEU_NOPS
-0004A8 EC?? F???      00582     call DEU_NOPS
-0004AC EF?? F???      00583     goto BUCLE
-                      00584     
-0004B0                00585 ID_3
-0004B0 EC?? F???      00586     call DEU_NOPS
-0004B4 0000           00587     NOP
-0004B6 C002 FF89      00588     movff COLOR, LATA
-0004BA 0000           00589     NOP
-0004BC 0000           00590     NOP
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 13
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-0004BE 0000           00591     NOP
-0004C0 6A89           00592     clrf LATA, 0
-0004C2 EC?? F???      00593     call FORTY_NOPS
-0004C6 EC?? F???      00594     call FORTY_NOPS
-0004CA EC?? F???      00595     call DEU_NOPS
-0004CE EC?? F???      00596     call NOU_NOPS
-0004D2 6E89           00597     movwf LATA, 0
-0004D4 0000           00598     NOP
-0004D6 0000           00599     NOP
-0004D8 0000           00600     NOP
-0004DA 6A89           00601     clrf LATA, 0
-0004DC EC?? F???      00602     call FORTY_NOPS
-0004E0 EC?? F???      00603     call DOTZE_NOPS
-0004E4 EC?? F???      00604     call DOTZE_NOPS
-0004E8 EC?? F???      00605     call DEU_NOPS
-0004EC EC?? F???      00606     call CINC_NOPS
-0004F0 EF?? F???      00607     goto BUCLE
-                      00608     
-                      00609         
-0004F4                00610 ID_3_V2
-0004F4 EC?? F???      00611     call DEU_NOPS
-0004F8 C002 FF89      00612     movff COLOR, LATA
-0004FC 0000           00613     NOP
-0004FE 0000           00614     NOP
-000500 0000           00615     NOP
-000502 6A89           00616     clrf LATA, 0
-000504 EC?? F???      00617     call FORTY_NOPS
-000508 EC?? F???      00618     call FORTY_NOPS
-00050C EC?? F???      00619     call DEU_NOPS
-000510 EC?? F???      00620     call NOU_NOPS
-000514 6E89           00621     movwf LATA, 0
-000516 0000           00622     NOP
-000518 0000           00623     NOP
-00051A 0000           00624     NOP
-00051C 6A89           00625     clrf LATA, 0
-00051E EC?? F???      00626     call FORTY_NOPS
-000522 EC?? F???      00627     call DEU_NOPS
-000526 EC?? F???      00628     call DEU_NOPS
-00052A EC?? F???      00629     call DEU_NOPS
-00052E EC?? F???      00630     call DEU_NOPS
-000532 EF?? F???      00631     goto BUCLE
-                      00632     
-000536                00633 ID_4_SUP
-000536 EC?? F???      00634     call NOU_NOPS
-00053A C002 FF89      00635     movff COLOR, LATA
-00053E 0000           00636     NOP
-000540 0000           00637     NOP
-000542 0000           00638     NOP
-000544 6A89           00639     clrf LATA, 0
-000546 EC?? F???      00640     call FORTY_NOPS
-00054A EC?? F???      00641     call FORTY_NOPS
-00054E EC?? F???      00642     call SET_NOPS
-000552 6E89           00643     movwf LATA, 0
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 14
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000554 EC?? F???      00644     call DEU_NOPS
-000558 EC?? F???      00645     call DEU_NOPS
-00055C EC?? F???      00646     call SET_NOPS
-000560 6A89           00647     clrf LATA, 0
-000562 EC?? F???      00648     call FORTY_NOPS
-000566 EC?? F???      00649     call DOTZE_NOPS
-00056A EC?? F???      00650     call DEU_NOPS
-00056E EC?? F???      00651     call CINC_NOPS
-000572 EF?? F???      00652     goto BUCLE
-                      00653     
-000576                00654 ID_4_INF
-000576 EC?? F???      00655     call DEU_NOPS
-00057A EC?? F???      00656     call SET_NOPS
-00057E EC?? F???      00657     call SET_NOPS
-000582 6E89           00658     movwf LATA, 0
-000584 0000           00659     NOP
-000586 0000           00660     NOP
-000588 0000           00661     NOP
-00058A 6A89           00662     clrf LATA, 0
-00058C EC?? F???      00663     call FORTY_NOPS
-000590 EC?? F???      00664     call FORTY_NOPS
-000594 EC?? F???      00665     call SET_NOPS
-000598 6E89           00666     movwf LATA, 0
-00059A EC?? F???      00667     call DEU_NOPS
-00059E EC?? F???      00668     call DEU_NOPS
-0005A2 EC?? F???      00669     call SET_NOPS
-0005A6 6A89           00670     clrf LATA, 0
-0005A8 EC?? F???      00671     call FORTY_NOPS
-0005AC EC?? F???      00672     call DOTZE_NOPS
-0005B0 EC?? F???      00673     call DOTZE_NOPS
-0005B4 EC?? F???      00674     call DEU_NOPS
-0005B8 EF?? F???      00675     goto BUCLE
-                      00676     
-0005BC                00677 ID_5
-0005BC EC?? F???      00678     call SET_NOPS
-0005C0 EC?? F???      00679     call SET_NOPS
-0005C4 EC?? F???      00680     call CINC_NOPS
-0005C8 0000           00681     NOP
-0005CA 6E89           00682     movwf LATA, 0
-0005CC 0000           00683     NOP
-0005CE 0000           00684     NOP
-0005D0 0000           00685     NOP
-0005D2 6A89           00686     clrf LATA, 0
-0005D4 EC?? F???      00687     call FORTY_NOPS
-0005D8 EC?? F???      00688     call FORTY_NOPS
-0005DC EC?? F???      00689     call SET_NOPS
-0005E0 6E89           00690     movwf LATA, 0
-0005E2 0000           00691     NOP
-0005E4 0000           00692     NOP
-0005E6 0000           00693     NOP
-0005E8 6A89           00694     clrf LATA, 0
-0005EA EC?? F???      00695     call DEU_NOPS
-0005EE EC?? F???      00696     call NOU_NOPS
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 15
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-0005F2 6E89           00697     movwf LATA, 0
-0005F4 0000           00698     NOP
-0005F6 0000           00699     NOP
-0005F8 0000           00700     NOP
-0005FA 6A89           00701     clrf LATA, 0
-0005FC EC?? F???      00702     call FORTY_NOPS
-000600 EC?? F???      00703     call DOTZE_NOPS
-000604 EC?? F???      00704     call DOTZE_NOPS
-000608 EC?? F???      00705     call DEU_NOPS
-00060C EF?? F???      00706     goto BUCLE
-                      00707     
-000610                00708 ID_6
-000610 EC?? F???      00709     call DEU_NOPS
-000614 EC?? F???      00710     call CINC_NOPS
-000618 C002 FF89      00711     movff COLOR, LATA
-00061C 0000           00712     NOP
-00061E 0000           00713     NOP
-000620 0000           00714     NOP
-000622 6A89           00715     clrf LATA, 0
-000624 EC?? F???      00716     call FORTY_NOPS
-000628 EC?? F???      00717     call FORTY_NOPS
-00062C EC?? F???      00718     call CINC_NOPS
-000630 0E05           00719     movlw PINK
-000632 6E89           00720     movwf LATA, 0
-000634 0000           00721     NOP
-000636 0000           00722     NOP
-000638 0000           00723     NOP
-00063A 6A89           00724     clrf LATA, 0
-00063C EC?? F???      00725     call NOU_NOPS
-000640 EC?? F???      00726     call NOU_NOPS
-000644 0E05           00727     movlw PINK
-000646 6E89           00728     movwf LATA, 0
-000648 0000           00729     NOP
-00064A 0000           00730     NOP
-00064C 0000           00731     NOP
-00064E 6A89           00732     clrf LATA, 0
-000650 EC?? F???      00733     call CINC_NOPS
-000654 0000           00734     NOP
-000656 0E05           00735     movlw PINK
-000658 6E89           00736     movwf LATA, 0
-00065A 0000           00737     NOP
-00065C 0000           00738     NOP
-00065E 0000           00739     NOP
-000660 6A89           00740     clrf LATA, 0
-000662 EC?? F???      00741     call NOU_NOPS
-000666 EC?? F???      00742     call NOU_NOPS
-00066A 0E05           00743     movlw PINK
-00066C 6E89           00744     movwf LATA, 0
-00066E 0000           00745     NOP
-000670 0000           00746     NOP
-000672 0000           00747     NOP
-000674 6A89           00748     clrf LATA, 0
-000676 EC?? F???      00749     call CINC_NOPS
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 16
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-00067A 0000           00750     NOP
-00067C 0E05           00751     movlw PINK
-00067E 6E89           00752     movwf LATA, 0
-000680 EC?? F???      00753     call DEU_NOPS
-000684 EC?? F???      00754     call DEU_NOPS
-000688 EC?? F???      00755     call SET_NOPS
-00068C 6A89           00756     clrf LATA, 0
-00068E 0000           00757     NOP
-000690 0000           00758     NOP
-000692 0000           00759     NOP  
-000694 EF?? F???      00760     goto BUCLE
-                      00761     
-000698                00762 ID_7
-000698 0000           00763     NOP
-00069A EC?? F???      00764     call CINC_NOPS
-00069E EC?? F???      00765     call CINC_NOPS
-0006A2 0000           00766     NOP
-0006A4 C002 FF89      00767     movff COLOR, LATA
-0006A8 0000           00768     NOP
-0006AA 0000           00769     NOP
-0006AC 0000           00770     NOP
-0006AE 6A89           00771     clrf LATA, 0
-0006B0 EC?? F???      00772     call FORTY_NOPS
-0006B4 EC?? F???      00773     call FORTY_NOPS
-0006B8 EC?? F???      00774     call CINC_NOPS
-0006BC 0E05           00775     movlw PINK
-0006BE 6E89           00776     movwf LATA, 0
-0006C0 0000           00777     NOP
-0006C2 0000           00778     NOP
-0006C4 0000           00779     NOP
-0006C6 6A89           00780     clrf LATA, 0
-0006C8 EC?? F???      00781     call NOU_NOPS
-0006CC EC?? F???      00782     call NOU_NOPS
-0006D0 0E05           00783     movlw PINK
-0006D2 6E89           00784     movwf LATA, 0
-0006D4 0000           00785     NOP
-0006D6 0000           00786     NOP
-0006D8 0000           00787     NOP
-0006DA 6A89           00788     clrf LATA, 0
-0006DC EC?? F???      00789     call CINC_NOPS
-0006E0 0000           00790     NOP
-0006E2 0E05           00791     movlw PINK
-0006E4 6E89           00792     movwf LATA, 0
-0006E6 0000           00793     NOP
-0006E8 0000           00794     NOP
-0006EA 0000           00795     NOP
-0006EC 6A89           00796     clrf LATA, 0
-0006EE EC?? F???      00797     call NOU_NOPS
-0006F2 EC?? F???      00798     call NOU_NOPS
-0006F6 0E05           00799     movlw PINK
-0006F8 6E89           00800     movwf LATA, 0
-0006FA 0000           00801     NOP
-0006FC 0000           00802     NOP
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 17
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-0006FE 0000           00803     NOP
-000700 6A89           00804     clrf LATA, 0
-000702 EC?? F???      00805     call CINC_NOPS
-000706 0000           00806     NOP
-000708 0E05           00807     movlw PINK
-                      00808     ;movwf LATA, 0
-00070A 0000           00809     NOP ;ADDED
-00070C 0000           00810     NOP
-00070E 0000           00811     NOP
-000710 0000           00812     NOP
-000712 6A89           00813     clrf LATA, 0
-000714 EC?? F???      00814     call NOU_NOPS
-000718 EC?? F???      00815     call NOU_NOPS
-00071C 0E05           00816     movlw PINK
-00071E 6E89           00817     movwf LATA, 0
-000720 0000           00818     NOP
-000722 0000           00819     NOP
-000724 0000           00820     NOP
-000726 6A89           00821     clrf LATA, 0
-000728 0000           00822     NOP
-00072A 0000           00823     NOP
-00072C 0000           00824     NOP    
-00072E EF?? F???      00825     goto BUCLE
-                      00826     
-000732                00827 ID_8
-000732 EC?? F???      00828     call SET_NOPS
-000736 0000           00829     NOP
-000738 C002 FF89      00830     movff COLOR, LATA
-00073C 0000           00831     NOP
-00073E 0000           00832     NOP
-000740 0000           00833     NOP
-000742 6A89           00834     clrf LATA, 0
-000744 EC?? F???      00835     call FORTY_NOPS
-000748 EC?? F???      00836     call FORTY_NOPS
-00074C EC?? F???      00837     call CINC_NOPS
-000750 0E05           00838     movlw PINK
-000752 6E89           00839     movwf LATA, 0
-000754 EC?? F???      00840     call DEU_NOPS
-000758 EC?? F???      00841     call DEU_NOPS
-00075C EC?? F???      00842     call SET_NOPS
-000760 6A89           00843     clrf LATA, 0
-000762 EC?? F???      00844     call CINC_NOPS
-000766 0000           00845     NOP
-000768 0E05           00846     movlw PINK
-00076A 6E89           00847     movwf LATA, 0
-00076C EC?? F???      00848     call DEU_NOPS
-000770 EC?? F???      00849     call DEU_NOPS
-000774 EC?? F???      00850     call SET_NOPS
-000778 6A89           00851     clrf LATA, 0
-00077A EC?? F???      00852     call CINC_NOPS
-00077E 0000           00853     NOP
-000780 0E05           00854     movlw PINK
-000782 6E89           00855     movwf LATA, 0
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 18
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000784 EC?? F???      00856     call DEU_NOPS
-000788 EC?? F???      00857     call DEU_NOPS
-00078C EC?? F???      00858     call SET_NOPS
-000790 6A89           00859     clrf LATA, 0
-000792 0000           00860     NOP
-000794 0000           00861     NOP
-000796 0000           00862     NOP
-000798 EF?? F???      00863     goto BUCLE
-                      00864     
-00079C                00865 ID_9
-00079C 0000           00866     NOP
-00079E 0000           00867     NOP
-0007A0 0000           00868     NOP
-0007A2 0000           00869     NOP
-0007A4 C002 FF89      00870     movff COLOR, LATA
-0007A8 0000           00871     NOP
-0007AA 0000           00872     NOP
-0007AC 0000           00873     NOP
-0007AE 6A89           00874     clrf LATA, 0
-0007B0 EC?? F???      00875     call FORTY_NOPS
-0007B4 EC?? F???      00876     call FORTY_NOPS
-0007B8 EC?? F???      00877     call DOTZE_NOPS
-0007BC EC?? F???      00878     call DOTZE_NOPS
-0007C0 EC?? F???      00879     call CINC_NOPS
-0007C4 0E05           00880     movlw PINK
-0007C6 6E89           00881     movwf LATA, 0
-0007C8 0000           00882     NOP
-0007CA 0000           00883     NOP
-0007CC 0000           00884     NOP
-0007CE 6A89           00885     clrf LATA, 0
-0007D0 EC?? F???      00886     call DOTZE_NOPS
-0007D4 EC?? F???      00887     call DOTZE_NOPS
-0007D8 EC?? F???      00888     call CINC_NOPS
-0007DC 0000           00889     NOP
-0007DE 0E05           00890     movlw PINK
-0007E0 6E89           00891     movwf LATA, 0
-0007E2 0000           00892     NOP
-0007E4 0000           00893     NOP
-0007E6 0000           00894     NOP
-0007E8 6A89           00895     clrf LATA, 0
-0007EA EC?? F???      00896     call CINC_NOPS
-0007EE 0000           00897     NOP
-0007F0 0E05           00898     movlw PINK
-                      00899     ;movwf LATA, 0
-0007F2 0000           00900     NOP ;ADDED
-0007F4 0000           00901     NOP
-0007F6 0000           00902     NOP
-0007F8 0000           00903     NOP
-0007FA 6A89           00904     clrf LATA, 0
-0007FC EC?? F???      00905     call NOU_NOPS
-000800 EC?? F???      00906     call NOU_NOPS
-000804 0E05           00907     movlw PINK
-000806 6E89           00908     movwf LATA, 0
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 19
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000808 0000           00909     NOP
-00080A 0000           00910     NOP
-00080C 0000           00911     NOP
-00080E 6A89           00912     clrf LATA, 0
-000810 0000           00913     NOP
-000812 0000           00914     NOP
-000814 0000           00915     NOP
-000816 EF?? F???      00916     goto BUCLE
-                      00917     
-00081A                00918 ID_10
-00081A C002 FF89      00919     movff COLOR, LATA
-00081E EC?? F???      00920     call DEU_NOPS
-000822 6A89           00921     clrf LATA, 0
-000824 EC?? F???      00922     call FORTY_NOPS
-000828 EC?? F???      00923     call FORTY_NOPS
-00082C EC?? F???      00924     call DOTZE_NOPS
-000830 EC?? F???      00925     call DEU_NOPS
-000834 0E05           00926     movlw PINK
-000836 6E89           00927     movwf LATA, 0
-000838 0000           00928     NOP
-00083A 0000           00929     NOP
-00083C 0000           00930     NOP
-00083E 6A89           00931     clrf LATA, 0
-000840 EC?? F???      00932     call DOTZE_NOPS
-000844 EC?? F???      00933     call DOTZE_NOPS
-000848 EC?? F???      00934     call CINC_NOPS
-00084C 0000           00935     NOP
-00084E 0E05           00936     movlw PINK
-000850 6E89           00937     movwf LATA, 0
-000852 0000           00938     NOP
-000854 0000           00939     NOP
-000856 0000           00940     NOP
-000858 6A89           00941     clrf LATA, 0
-00085A EC?? F???      00942     call CINC_NOPS
-00085E 0000           00943     NOP
-000860 0E05           00944     movlw PINK
-000862 6E89           00945     movwf LATA, 0
-000864 EC?? F???      00946     call DEU_NOPS
-000868 EC?? F???      00947     call DEU_NOPS
-00086C EC?? F???      00948     call SET_NOPS
-000870 6A89           00949     clrf LATA, 0
-000872 0000           00950     NOP
-000874 0000           00951     NOP
-000876 0000           00952     NOP
-000878 EF?? F???      00953     goto BUCLE
-                      00954     
-00087C                00955 ID_11
-00087C EC?? F???      00956     call FORTY_NOPS
-000880 EC?? F???      00957     call FORTY_NOPS
-000884 EC?? F???      00958     call DOTZE_NOPS
-000888 EC?? F???      00959     call DOTZE_NOPS
-00088C EC?? F???      00960     call CINC_NOPS
-000890 0E05           00961     movlw PINK
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 20
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000892 6E89           00962     movwf LATA, 0
-000894 0000           00963     NOP
-000896 0000           00964     NOP
-000898 0000           00965     NOP
-00089A 6A89           00966     clrf LATA, 0
-00089C EC?? F???      00967     call NOU_NOPS
-0008A0 EC?? F???      00968     call NOU_NOPS
-0008A4 0E05           00969     movlw PINK
-0008A6 6E89           00970     movwf LATA, 0
-0008A8 0000           00971     NOP
-0008AA 0000           00972     NOP
-0008AC 0000           00973     NOP
-0008AE 6A89           00974     clrf LATA, 0
-0008B0 EC?? F???      00975     call CINC_NOPS
-0008B4 0000           00976     NOP
-0008B6 0E05           00977     movlw PINK
-0008B8 6E89           00978     movwf LATA, 0
-0008BA 0000           00979     NOP
-0008BC 0000           00980     NOP
-0008BE 0000           00981     NOP
-0008C0 6A89           00982     clrf LATA, 0
-0008C2 EC?? F???      00983     call NOU_NOPS
-0008C6 EC?? F???      00984     call NOU_NOPS
-0008CA 0E05           00985     movlw PINK
-0008CC 6E89           00986     movwf LATA, 0
-0008CE 0000           00987     NOP
-0008D0 0000           00988     NOP
-0008D2 0000           00989     NOP
-0008D4 6A89           00990     clrf LATA, 0
-0008D6 EC?? F???      00991     call CINC_NOPS
-0008DA 0000           00992     NOP
-0008DC 0E05           00993     movlw PINK
-0008DE 6E89           00994     movwf LATA, 0
-0008E0 EC?? F???      00995     call DOTZE_NOPS
-0008E4 EC?? F???      00996     call DEU_NOPS
-0008E8 EC?? F???      00997     call CINC_NOPS
-0008EC 6A89           00998     clrf LATA, 0
-0008EE 0000           00999     NOP
-0008F0 0000           01000     NOP
-0008F2 0000           01001     NOP
-0008F4 EF?? F???      01002     goto BUCLE
-                      01003     
-0008F8                01004 ID_12
-0008F8 EC?? F???      01005     call FORTY_NOPS
-0008FC EC?? F???      01006     call FORTY_NOPS
-000900 EC?? F???      01007     call DEU_NOPS  
-000904 EC?? F???      01008     call DEU_NOPS
-000908 EC?? F???      01009     call CINC_NOPS
-00090C 0E05           01010     movlw PINK
-00090E 6E89           01011     movwf LATA, 0
-000910 0000           01012     NOP
-000912 0000           01013     NOP
-000914 0000           01014     NOP
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 21
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000916 6A89           01015     clrf LATA, 0
-000918 EC?? F???      01016     call NOU_NOPS
-00091C EC?? F???      01017     call NOU_NOPS
-000920 0E05           01018     movlw PINK
-000922 6E89           01019     movwf LATA, 0
-000924 0000           01020     NOP
-000926 0000           01021     NOP
-000928 0000           01022     NOP
-00092A 6A89           01023     clrf LATA, 0
-00092C EC?? F???      01024     call CINC_NOPS
-000930 0000           01025     NOP
-000932 0E05           01026     movlw PINK
-000934 6E89           01027     movwf LATA, 0
-000936 0000           01028     NOP
-000938 0000           01029     NOP
-00093A 0000           01030     NOP
-00093C 6A89           01031     clrf LATA, 0
-00093E EC?? F???      01032     call NOU_NOPS
-000942 EC?? F???      01033     call NOU_NOPS
-000946 0E05           01034     movlw PINK
-000948 6E89           01035     movwf LATA, 0
-00094A 0000           01036     NOP
-00094C 0000           01037     NOP
-00094E 0000           01038     NOP
-000950 6A89           01039     clrf LATA, 0
-000952 EC?? F???      01040     call CINC_NOPS
-000956 0000           01041     NOP
-000958 0E05           01042     movlw PINK
-00095A 6E89           01043     movwf LATA, 0
-00095C 0000           01044     NOP
-00095E 0000           01045     NOP
-000960 0000           01046     NOP
-000962 6A89           01047     clrf LATA, 0
-000964 EC?? F???      01048     call NOU_NOPS
-000968 EC?? F???      01049     call NOU_NOPS
-00096C 0E05           01050     movlw PINK
-00096E 6E89           01051     movwf LATA, 0
-000970 0000           01052     NOP
-000972 0000           01053     NOP
-000974 0000           01054     NOP
-000976 6A89           01055     clrf LATA, 0
-000978 0000           01056     NOP
-00097A 0000           01057     NOP
-00097C 0000           01058     NOP
-00097E EF?? F???      01059     goto BUCLE
-                      01060     
-000982                01061 ID_13
-000982 EC?? F???      01062     call FORTY_NOPS
-000986 EC?? F???      01063     call FORTY_NOPS
-00098A EC?? F???      01064     call DOTZE_NOPS
-00098E EC?? F???      01065     call NOU_NOPS
-000992 0E05           01066     movlw PINK
-000994 6E89           01067     movwf LATA, 0
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 22
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000996 EC?? F???      01068     call DEU_NOPS
-00099A EC?? F???      01069     call DEU_NOPS
-00099E EC?? F???      01070     call SET_NOPS
-0009A2 6A89           01071     clrf LATA, 0
-0009A4 EC?? F???      01072     call CINC_NOPS
-0009A8 0000           01073     NOP
-0009AA 0E05           01074     movlw PINK
-0009AC 6E89           01075     movwf LATA, 0
-0009AE EC?? F???      01076     call DEU_NOPS
-0009B2 EC?? F???      01077     call DEU_NOPS
-0009B6 EC?? F???      01078     call SET_NOPS
-0009BA 6A89           01079     clrf LATA, 0
-0009BC EC?? F???      01080     call CINC_NOPS
-0009C0 0000           01081     NOP
-0009C2 0E05           01082     movlw PINK
-0009C4 6E89           01083     movwf LATA, 0
-0009C6 EC?? F???      01084     call DEU_NOPS
-0009CA EC?? F???      01085     call DEU_NOPS
-0009CE EC?? F???      01086     call SET_NOPS
-0009D2 6A89           01087     clrf LATA, 0
-0009D4 0000           01088     NOP
-0009D6 0000           01089     NOP
-0009D8 0000           01090     NOP    
-0009DA EF?? F???      01091     goto BUCLE
-                      01092     
-0009DE                01093 ID_14
-0009DE EC?? F???      01094     call FORTY_NOPS
-0009E2 EC?? F???      01095     call FORTY_NOPS
-0009E6 EC?? F???      01096     call DOTZE_NOPS
-0009EA EC?? F???      01097     call DOTZE_NOPS
-0009EE EC?? F???      01098     call DEU_NOPS
-0009F2 EC?? F???      01099     call SET_NOPS
-0009F6 0E05           01100     movlw PINK
-0009F8 6E89           01101     movwf LATA, 0
-0009FA 0000           01102     NOP
-0009FC 0000           01103     NOP
-0009FE 0000           01104     NOP
-000A00 6A89           01105     clrf LATA, 0
-000A02 EC?? F???      01106     call DOTZE_NOPS
-000A06 EC?? F???      01107     call DOTZE_NOPS
-000A0A EC?? F???      01108     call CINC_NOPS
-000A0E 0000           01109     NOP
-000A10 0E05           01110     movlw PINK
-000A12 6E89           01111     movwf LATA, 0
-000A14 0000           01112     NOP
-000A16 0000           01113     NOP
-000A18 0000           01114     NOP
-000A1A 6A89           01115     clrf LATA, 0
-000A1C EC?? F???      01116     call CINC_NOPS
-000A20 0000           01117     NOP
-000A22 0E05           01118     movlw PINK
-000A24 6E89           01119     movwf LATA, 0
-000A26 0000           01120     NOP
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 23
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000A28 0000           01121     NOP
-000A2A 0000           01122     NOP
-000A2C 6A89           01123     clrf LATA, 0
-000A2E EC?? F???      01124     call NOU_NOPS
-000A32 EC?? F???      01125     call NOU_NOPS
-000A36 0E05           01126     movlw PINK
-000A38 6E89           01127     movwf LATA, 0
-000A3A 0000           01128     NOP
-000A3C 0000           01129     NOP
-000A3E 0000           01130     NOP
-000A40 6A89           01131     clrf LATA, 0
-000A42 0000           01132     NOP
-000A44 0000           01133     NOP
-000A46 0000           01134     NOP
-000A48 EF?? F???      01135     goto BUCLE
-                      01136     
-000A4C                01137 ID_15
-000A4C EC?? F???      01138     call FORTY_NOPS
-000A50 EC?? F???      01139     call FORTY_NOPS
-000A54 EC?? F???      01140     call DOTZE_NOPS
-000A58 EC?? F???      01141     call DEU_NOPS
-000A5C EC?? F???      01142     call DEU_NOPS
-000A60 EC?? F???      01143     call CINC_NOPS
-000A64 0E05           01144     movlw PINK
-000A66 6E89           01145     movwf LATA, 0
-000A68 0000           01146     NOP
-000A6A 0000           01147     NOP
-000A6C 0000           01148     NOP
-000A6E 6A89           01149     clrf LATA, 0
-000A70 EC?? F???      01150     call DOTZE_NOPS
-000A74 EC?? F???      01151     call DOTZE_NOPS
-000A78 EC?? F???      01152     call CINC_NOPS
-000A7C 0000           01153     NOP
-000A7E 0E05           01154     movlw PINK
-000A80 6E89           01155     movwf LATA, 0
-000A82 0000           01156     NOP
-000A84 0000           01157     NOP
-000A86 0000           01158     NOP
-000A88 6A89           01159     clrf LATA, 0
-000A8A EC?? F???      01160     call CINC_NOPS
-000A8E 0000           01161     NOP
-000A90 0E05           01162     movlw PINK
-000A92 6E89           01163     movwf LATA, 0
-000A94 EC?? F???      01164     call DEU_NOPS
-000A98 EC?? F???      01165     call DEU_NOPS
-000A9C EC?? F???      01166     call SET_NOPS
-000AA0 6A89           01167     clrf LATA, 0
-000AA2 0000           01168     NOP
-000AA4 0000           01169     NOP
-000AA6 0000           01170     NOP
-000AA8 EF?? F???      01171     goto BUCLE
-                      01172     
-                      01173     ;FUNCIONS DE NOPS, PER A ESTALVIAR LÍNIES DE CODI I AUGMENTAR LA COMPRENSIÓ D'AQUEST
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 24
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-000AAC                01174 CINC_NOPS
-000AAC 0000           01175     NOP
-000AAE 0012           01176     return
-                      01177     
-000AB0                01178 SET_NOPS
-000AB0 0000           01179     NOP
-000AB2 0000           01180     NOP
-000AB4 5002           01181     movf COLOR, 0, 0
-000AB6 0012           01182     return
-                      01183     
-000AB8                01184 NOU_NOPS
-000AB8 EC?? F???      01185     call CINC_NOPS
-000ABC 0012           01186     return
-                      01187 
-000ABE                01188 DEU_NOPS
-000ABE EC?? F???      01189     call CINC_NOPS
-000AC2 0000           01190     NOP
-000AC4 0012           01191     return
-                      01192     
-000AC6                01193 N17_NOPS
-000AC6 EC?? F???      01194     call DOTZE_NOPS
-000ACA 0000           01195     NOP
-000ACC 0012           01196     return
-                      01197     
-000ACE                01198 FORTY_NOPS
-000ACE EC?? F???      01199     call DEU_NOPS
-000AD2 EC?? F???      01200     call DEU_NOPS
-000AD6 EC?? F???      01201     call DEU_NOPS
-000ADA EC?? F???      01202     call CINC_NOPS
-000ADE 5002           01203     movf COLOR, 0, 0
-000AE0 0012           01204     return
-                      01205     
-000AE2                01206 DOTZE_NOPS
-000AE2 EC?? F???      01207     call SET_NOPS
-000AE6 5002           01208     movf COLOR, 0, 0
-000AE8 0012           01209     return
-                      01210       
-                      01211 ;*******
-                      01212 ;* END *
-                      01213 ;*******
-                      01214     END
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 25
+0000AE 6204           00150     cpfseq WORD, 0
+0000B0 EF?? F???      00151     goto $+6
+0000B4 EF?? F???      00152     goto BUCLE
+                      00153     
+0000B8 2A01           00154     incf SIZEL, 1, 0
+0000BA B0D8           00155     btfsc STATUS, C, 0
+0000BC 2A00           00156     incf SIZEH, 1, 0
+                      00157     
+0000BE C004 FFEE      00158     movff WORD, POSTINC0
+0000C2 0EFF           00159     movlw SEND_BYTE
+0000C4 6EAD           00160     movwf TXREG, 0
+0000C6 EF?? F???      00161     goto READ_MESSAGE
+                      00162     
+                      00163 
+                      00164 ;*******
+                      00165 ;* END *
+                      00166 ;*******
+                      00167     END
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  5
 
 
 SYMBOL TABLE
@@ -1460,19 +257,17 @@ BCLIF                             00000003
 BCLIP                             00000003
 BF                                00000000
 BGST                              00000005
-BLACK                             00000000
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 26
+BOR                               00000000
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  6
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-BLUE                              00000004
-BOR                               00000000
 BRG16                             00000003
 BRGH                              00000002
 BSR                               00000FE0
-BUCLE                             000000F8
+BUCLE                             00000068
 C                                 00000000
 C1INV                             00000004
 C1N                               00000000
@@ -1514,19 +309,20 @@ CCPR2                             00000FBB
 CCPR2H                            00000FBC
 CCPR2L                            00000FBB
 CFGS                              00000006
+CHECK_LOAD_BTN                    0000006E
+CHECK_SEND_BTN                    00000076
 CHS0                              00000002
 CHS1                              00000003
 CHS2                              00000004
 CHS3                              00000005
-CINC_NOPS                         00000AAC
 CIS                               00000003
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 27
+CK                                00000006
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  7
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-CK                                00000006
 CKE                               00000006
 CKP                               00000004
 CLKI                              00000007
@@ -1538,8 +334,6 @@ CMCON                             00000FB4
 CMIE                              00000006
 CMIF                              00000006
 CMIP                              00000006
-COLOR                             00000002
-COUNT_LINE                        00000038
 CREN                              00000004
 CS                                00000002
 CSRC                              00000007
@@ -1553,7 +347,6 @@ CVREN                             00000007
 CVROE                             00000006
 CVRR                              00000005
 CVRSS                             00000004
-CYAN                              00000006
 D                                 00000005
 DC                                00000001
 DC1B0                             00000004
@@ -1565,11 +358,7 @@ DDRB                              TRISB
 DDRC                              TRISC
 DDRD                              TRISD
 DDRE                              TRISE
-DECISION                          00000368
-DEFEAT                            0000038E
-DEU_NOPS                          00000ABE
 DONE                              00000001
-DOTZE_NOPS                        00000AE2
 D_A                               00000005
 D_NOT_A                           00000005
 ECCP1AS                           00000FB6
@@ -1579,12 +368,6 @@ ECCPAS0                           00000004
 ECCPAS1                           00000005
 ECCPAS2                           00000006
 ECCPASE                           00000007
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 28
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 EEADR                             00000FA9
 EECON1                            00000FA6
 EECON2                            00000FA7
@@ -1593,12 +376,17 @@ EEIE                              00000004
 EEIF                              00000004
 EEIP                              00000004
 EEPGD                             00000007
-ERRORS                            00000003
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  8
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+END_BYTE                          000000FF
 FAST                              00000001
 FERR                              00000002
 FLT0                              00000000
 FLTS                              00000002
-FORTY_NOPS                        00000ACE
 FREE                              00000004
 FSR0                              00000000
 FSR0H                             00000FEA
@@ -1617,8 +405,7 @@ GIE_GIEH                          00000007
 GO                                00000001
 GO_DONE                           00000001
 GO_NOT_DONE                       00000001
-GREEN                             00000002
-HIGH_INT                          0000001C
+HIGH_INT                          0000001A
 HI_INT_VECTOR                     00000008
 HLVDCON                           00000FD2
 HLVDEN                            00000004
@@ -1630,79 +417,36 @@ HLVDL0                            00000000
 HLVDL1                            00000001
 HLVDL2                            00000002
 HLVDL3                            00000003
-HSYNC_1                           00000058
 IBF                               00000007
 IBOV                              00000005
 IDLEN                             00000007
-ID_0_INF                          000003A6
-ID_0_INF_12_NOPS                  000002F0
-ID_0_INF_15_NOPS                  000002FC
-ID_0_INF_18_NOPS                  00000308
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 29
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
-ID_0_INF_25_NOPS                  00000318
-ID_0_SUP                          00000354
-ID_0_SUP_0_NOPS                   000002B8
-ID_0_SUP_10_NOPS                  000002CE
-ID_0_SUP_13_NOPS                  000002D6
-ID_0_SUP_20_NOPS                  000002E4
-ID_0_SUP_4_NOPS                   000002BC
-ID_0_SUP_7_NOPS                   000002C4
-ID_0_SUP_CONT                     00000394
-ID_1                              000003D2
-ID_10                             0000081A
-ID_11                             0000087C
-ID_12                             000008F8
-ID_13                             00000982
-ID_14                             000009DE
-ID_15                             00000A4C
-ID_2_INF                          00000478
-ID_2_INF_3_NOPS                   00000348
-ID_2_INF_4_NOPS                   0000034C
-ID_2_SUP                          00000414
-ID_2_SUP_10_NOPS                  0000033E
-ID_2_SUP_3_NOPS                   00000328
-ID_2_SUP_4_NOPS                   0000032C
-ID_2_SUP_7_NOPS                   00000336
-ID_2_SUP_V2                       00000448
-ID_3                              000004B0
-ID_3_V2                           000004F4
-ID_4_INF                          00000576
-ID_4_SUP                          00000536
-ID_5                              000005BC
-ID_6                              00000610
-ID_7                              00000698
-ID_8                              00000732
-ID_9                              0000079C
 INDF0                             00000FEF
 INDF1                             00000FE7
 INDF2                             00000FDF
-INIT_INTS                         000000BE
-INIT_PORTS                        000000A6
-INIT_TMR                          000000CA
-INIT_VARS                         000000D6
+INIT_FSR0H                        00000000
+INIT_FSR0L                        00000080
+INIT_INTS                         00000032
+INIT_PORTS                        00000022
+INIT_TMR                          0000004C
+INIT_VARS                         0000001C
 INT0                              00000000
 INT0E                             00000004
 INT0F                             00000001
 INT0IE                            00000004
 INT0IF                            00000001
 INT1                              00000001
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  9
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 INT1E                             00000003
 INT1F                             00000000
 INT1IE                            00000003
 INT1IF                            00000000
 INT1IP                            00000006
 INT1P                             00000006
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 30
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 INT2                              00000002
 INT2E                             00000004
 INT2F                             00000001
@@ -1750,18 +494,18 @@ LATB7                             00000007
 LATC                              00000F8B
 LATC0                             00000000
 LATC1                             00000001
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 10
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 LATC2                             00000002
 LATC3                             00000003
 LATC4                             00000004
 LATC5                             00000005
 LATC6                             00000006
 LATC7                             00000007
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 31
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 LATD                              00000F8C
 LATD0                             00000000
 LATD1                             00000001
@@ -1775,7 +519,10 @@ LATE                              00000F8D
 LATE0                             00000000
 LATE1                             00000001
 LATE2                             00000002
-LOW_INT                           000000A4
+LOADED                            00000002
+LOAD_BTN                          00000092
+LOAD_CONST                        000000FF
+LOAD_MESSAGE                      00000092
 LOW_INT_VECTOR                    00000018
 LVDCON                            00000FD2
 LVDEN                             00000004
@@ -1790,11 +537,9 @@ LVV0                              00000000
 LVV1                              00000001
 LVV2                              00000002
 LVV3                              00000003
-MAIN                              000000E8
+MAIN                              00000058
 MCLR                              00000003
 N                                 00000004
-N17_NOPS                          00000AC6
-NEXT_IF                           0000010C
 NOT_A                             00000005
 NOT_ADDRESS                       00000005
 NOT_BOR                           00000000
@@ -1808,20 +553,17 @@ NOT_RD                            00000000
 NOT_RI                            00000004
 NOT_SS                            00000005
 NOT_T1SYNC                        00000002
-NOT_T3SYNC                        00000002
-NOT_TO                            00000003
-NOT_W                             00000002
-NOT_WR                            00000001
-NOT_WRITE                         00000002
-NOU_NOPS                          00000AB8
-N_LINE_H                          00000000
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 32
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 11
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-N_LINE_L                          00000001
+NOT_T3SYNC                        00000002
+NOT_TO                            00000003
+NOT_W                             00000002
+NOT_WR                            00000001
+NOT_WRITE                         00000002
 OBF                               00000006
 OERR                              00000001
 OSC1                              00000007
@@ -1840,8 +582,6 @@ P1C                               00000006
 P1D                               00000007
 P1M0                              00000006
 P1M1                              00000007
-PART_INFERIOR                     0000015C
-PART_SUPERIOR                     00000128
 PC                                00000FF9
 PCFG0                             00000000
 PCFG1                             00000001
@@ -1866,15 +606,13 @@ PGD                               00000007
 PGM                               00000005
 PIE1                              00000F9D
 PIE2                              00000FA0
-PINK                              00000005
-PINTA                             00000120
 PIR1                              00000F9E
 PIR2                              00000FA1
 PLLEN                             00000006
 PLUSW0                            00000FEB
 PLUSW1                            00000FE3
 PLUSW2                            00000FDB
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 33
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 12
 
 
 SYMBOL TABLE
@@ -1933,7 +671,7 @@ RB2                               00000002
 RB3                               00000003
 RB4                               00000004
 RB5                               00000005
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 34
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 13
 
 
 SYMBOL TABLE
@@ -1976,7 +714,7 @@ RE0                               00000000
 RE1                               00000001
 RE2                               00000002
 RE3                               00000003
-RED                               00000001
+READ_MESSAGE                      000000A2
 RESET_VECTOR                      00000000
 RI                                00000004
 RSEN                              00000001
@@ -1984,6 +722,7 @@ RX                                00000007
 RX9                               00000006
 RX9D                              00000000
 RXDTP                             00000005
+RX_PC                             00000082
 R_NOT_W                           00000002
 R_W                               00000002
 S                                 00000003
@@ -1991,20 +730,25 @@ SBOREN                            00000006
 SCK                               00000003
 SCKP                              00000004
 SCL                               00000003
-SCS0                              00000000
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 35
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 14
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+SCS0                              00000000
 SCS1                              00000001
 SDA                               00000004
 SDI                               00000004
 SDO                               00000005
 SEN                               00000000
 SENDB                             00000003
-SET_NOPS                          00000AB0
+SEND_BTN                          00000092
+SEND_BYTE                         000000FF
+SEND_MESSAGE                      00000092
+SENT                              00000003
+SIZEH                             00000000
+SIZEL                             00000001
 SMP                               00000007
 SP0                               00000000
 SP1                               00000001
@@ -2034,12 +778,6 @@ STKFUL                            00000007
 STKOVF                            00000007
 STKPTR                            00000FFC
 STKUNF                            00000006
-STOP_SIGNAL                       000000A0
-STOP_SIGNAL_1                     00000064
-STOP_SIGNAL_10                    00000080
-STOP_SIGNAL_11                    00000070
-STOP_SIGNAL_2                     0000008C
-STOP_SIGNAL_3                     00000098
 SWDTE                             00000000
 SWDTEN                            00000000
 SYNC                              00000004
@@ -2051,7 +789,7 @@ T0CS                              00000005
 T0IE                              00000005
 T0IF                              00000002
 T0PS0                             00000000
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 36
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 15
 
 
 SYMBOL TABLE
@@ -2110,7 +848,7 @@ TMR2IP                            00000001
 TMR2ON                            00000002
 TMR3                              00000FB2
 TMR3CS                            00000001
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 37
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 16
 
 
 SYMBOL TABLE
@@ -2131,20 +869,6 @@ TOUTPS0                           00000003
 TOUTPS1                           00000004
 TOUTPS2                           00000005
 TOUTPS3                           00000006
-TRAM_1                            000001AC
-TRAM_10                           0000027A
-TRAM_11                           00000288
-TRAM_12                           00000294
-TRAM_13                           000002A0
-TRAM_14                           000002AC
-TRAM_2                            000001BC
-TRAM_3                            000001D8
-TRAM_4                            000001F2
-TRAM_5                            0000020A
-TRAM_6                            00000228
-TRAM_7                            00000240
-TRAM_8                            00000256
-TRAM_9                            0000026C
 TRISA                             00000F92
 TRISA0                            00000000
 TRISA1                            00000001
@@ -2169,12 +893,6 @@ TRISC1                            00000001
 TRISC2                            00000002
 TRISC3                            00000003
 TRISC4                            00000004
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 38
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 TRISC5                            00000005
 TRISC6                            00000006
 TRISC7                            00000007
@@ -2189,6 +907,12 @@ TRISD6                            00000006
 TRISD7                            00000007
 TRISE                             00000F96
 TRISE0                            00000000
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 17
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 TRISE1                            00000001
 TRISE2                            00000002
 TRMT                              00000001
@@ -2211,29 +935,23 @@ UA                                00000001
 VCFG0                             00000004
 VCFG1                             00000005
 VDIRMAG                           00000007
-VICTORY                           00000382
 VPP                               00000003
 VREFM                             00000002
 VREFP                             00000003
 W                                 00000000
 WCOL                              00000007
 WDTCON                            00000FD1
-WHITE                             00000007
+WORD                              00000004
 WR                                00000001
 WREG                              00000FE8
 WREN                              00000002
 WRERR                             00000003
 WUE                               00000001
-YELLOW                            00000003
 Z                                 00000002
+_.org_2_00A4                      000000A4
+_.org_2_00B0                      000000B0
 _BBSIZ_BB1K_4L                    000000FF
 _BBSIZ_BB256_4L                   000000CF
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 39
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 _BBSIZ_BB512_4L                   000000DF
 _BORV_0_2L                        000000E7
 _BORV_1_2L                        000000EF
@@ -2248,6 +966,12 @@ _CCP2MX_RC1_3H                    000000FF
 _CONFIG1H                         00300001
 _CONFIG2H                         00300003
 _CONFIG2L                         00300002
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 18
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 _CONFIG3H                         00300005
 _CONFIG4L                         00300006
 _CONFIG5H                         00300009
@@ -2287,12 +1011,6 @@ _IDLOC7                           00200007
 _IESO_OFF_1H                      0000007F
 _IESO_ON_1H                       000000FF
 _LPT1OSC_OFF_3H                   000000FB
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 40
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 _LPT1OSC_ON_3H                    000000FF
 _LVP_OFF_4L                       000000FB
 _LVP_ON_4L                        000000FF
@@ -2307,6 +1025,12 @@ _OSC_INTIO2_1H                    000000F8
 _OSC_LP_1H                        000000F0
 _OSC_RCIO_1H                      000000F7
 _OSC_RC_1H                        000000F3
+MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 19
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 _OSC_XT_1H                        000000F1
 _PBADEN_ANA_3H                    000000FF
 _PBADEN_DIG_3H                    000000FD
@@ -2346,14 +1070,8 @@ _XINST_OFF_4L                     000000BF
 _XINST_ON_4L                      000000FF
 __18F4321                         00000001
 
-MPASM 5.70                          MAIN.ASM   2-13-2017  12:07:39         PAGE 41
-
-
-
-
-
 Errors   :     0
-Warnings :    12 reported,     0 suppressed
+Warnings :     0 reported,     0 suppressed
 Messages :     0 reported,     0 suppressed
 
 
