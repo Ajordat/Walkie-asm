@@ -22,6 +22,8 @@ HORIZ EQU 0x06
 LEDS_HZ EQU 0x07
 RIGHT_NOTLEFT EQU 0x08
 BLINK EQU 0x09
+N_CHAR EQU 0x0A
+DIV EQU 0x0B
  
 ;*************
 ;* CONSTANTS *
@@ -67,9 +69,9 @@ INIT_VARS
     clrf SIZEH, 0
     clrf SIZEL, 0
     
-    clrf HORIZ, 0
+    clrf HORIZ, 0   ;HORIZ
     movlw F_5HZ
-    movwf BLINK, 0
+    movwf BLINK, 0  ;BLINK
     
     clrf RIGHT_NOTLEFT, 0
     clrf LEDS_HZ, 0
@@ -83,6 +85,8 @@ INIT_PORTS
     bcf TRISB, 1, 0
     bcf TRISB, 0, 0
     clrf TRISD, 0
+    movlw 0x03
+    movwf LATD, 0   ;HORIZ
     return
     
 INIT_INTS
@@ -112,6 +116,8 @@ MAIN
     call INIT_TMR
 	
 BUCLE
+    btfsc PIR1, RCIF, 0
+    goto RX_PC
     tstfsz HORIZ
     goto LEDS_HORIZ
     tstfsz BLINK
@@ -159,6 +165,18 @@ LEDS_OFF
     clrf LATD, 0
     clrf LATB, 0
     clrf LEDS_HZ, 0
+    goto BUCLE
+    
+DIV_10
+    movf N_CHAR, 0, 0
+    addlw 0x01
+    btfsc STATUS, C, 0
+    addlw 0xFF
+    mullw 0x33
+    rrcf PRODH, 0, 0
+    movwf DIV, 0
+    
+RX_PC
     goto BUCLE
     
 WAIT
