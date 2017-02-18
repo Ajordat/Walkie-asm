@@ -70,8 +70,10 @@ INIT_VARS
     clrf SIZEL, 0
     
     clrf HORIZ, 0   ;HORIZ
-    movlw F_5HZ
-    movwf BLINK, 0  ;BLINK
+    
+    ;movlw F_5HZ
+    ;movwf BLINK, 0  ;BLINK
+    clrf BLINK, 0
     
     clrf RIGHT_NOTLEFT, 0
     clrf LEDS_HZ, 0
@@ -85,8 +87,10 @@ INIT_PORTS
     bcf TRISB, 1, 0
     bcf TRISB, 0, 0
     clrf TRISD, 0
-    movlw 0x03
-    movwf LATD, 0   ;HORIZ
+    ;movlw 0x03
+    ;movwf LATD, 0   ;HORIZ
+    clrf LATD, 0
+    clrf LATB, 0
     return
     
 INIT_INTS
@@ -95,6 +99,16 @@ INIT_INTS
     movwf INTCON, 0
     movlw 0x88
     movwf T0CON, 0
+    return
+    
+INIT_EUSART
+    movlw 0x26
+    movwf TXSTA, 0
+    movlw 0x90
+    movwf RCSTA, 0
+    movlw 0x81
+    movwf SPBRG, 0
+    clrf BAUDCON, 0
     return
     
 INIT_TMR
@@ -113,6 +127,7 @@ MAIN
     call INIT_VARS
     call INIT_PORTS
     call INIT_INTS
+    call INIT_EUSART
     call INIT_TMR
 	
 BUCLE
@@ -177,6 +192,13 @@ DIV_10
     movwf DIV, 0
     
 RX_PC
+    movf RCREG, 0, 0
+    comf HORIZ, 1, 0
+    movlw 0x03
+    btfss HORIZ, 0, 0
+    movlw 0x00
+    movwf LATD, 0
+    clrf LATB, 0
     goto BUCLE
     
 WAIT
