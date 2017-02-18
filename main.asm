@@ -50,6 +50,7 @@ LOW_INT_VECTOR
 ;***********************************
 HIGH_INT
     incf TIMES, 1, 0
+    
     retfie FAST
 
 ;*********
@@ -69,21 +70,24 @@ INIT_PORTS
     bcf TRISB, 1, 0
     bcf TRISB, 0, 0
     clrf TRISD, 0
+    clrf LATD, 0
     return
     
 INIT_INTS
-    bcf RCON, IPEN, 0
-    movlw 0xA0
-    movwf INTCON, 0
-    movlw 0x88
-    movwf T0CON, 0
+    ;bcf RCON, IPEN, 0
+    ;movlw 0xA0
+    ;movwf INTCON, 0
+    ;movlw 0x88
+    ;movwf T0CON, 0
     movlw 0x26
     movwf TXSTA, 0
     movlw 0x90
     movwf RCSTA, 0
     clrf BAUDCON, 0
+    bsf BAUDCON, 1, 0
     movlw 0x81
     movwf SPBRG, 0
+    clrf LATD, 0
     return
     
 INIT_TMR
@@ -102,22 +106,29 @@ MAIN
     call INIT_VARS
     call INIT_PORTS
     call INIT_INTS
-    call INIT_TMR
+    ;call INIT_TMR
 	
 BUCLE
     btfsc PIR1, RCIF, 0
     goto RX_PC
-	
+    goto BUCLE	;ADDED
+WAIT
+    goto WAIT
+    
+    ;COM CONY ESTAN SOLDATS ELS POLSADORS??
 CHECK_LOAD_BTN
     btfsc PORTC, 1, 0
-    goto LOAD_BTN
+    ;goto LOAD_BTN
+    setf LATD, 0
     clrf LOADED, 0
+    goto BUCLE
     
 CHECK_SEND_BTN
     btfsc PORTC, 0, 0
-    goto SEND_BTN
+    ;goto SEND_BTN
+    clrf LATD, 0
     clrf SENT, 0
-    ;goto BUCLE	;AQUÍ FALTA EL TRACTAMENT DELS LEDS
+    goto BUCLE	;AQUÍ FALTA EL TRACTAMENT DELS LEDS
     
 CHECK_LEDS
     movlw F_10HZ
@@ -133,10 +144,15 @@ LEDS_10HZ
 LEDS_5HZ
     
 RX_PC
-    movff RCREG, WORD
+    ;setf LATD, 0
+    movff RCREG, LATD
+    goto BUCLE
+    
     movlw LOAD_CONST
+    
     cpfseq WORD, 0
-    goto SEND_MESSAGE
+    ;goto SEND_MESSAGE
+    goto BUCLE ;ADDED
     goto LOAD_MESSAGE
     
 SEND_BTN
@@ -159,14 +175,15 @@ LOAD_MESSAGE
     
 READ_MESSAGE
     btfss PIR1, RCIF, 0
-    goto $-2
+    goto READ_MESSAGE
     movff RCREG, WORD
     
     movlw END_BYTE
     cpfseq WORD, 0
-    goto $+6
+    goto CONT
     goto BUCLE
-    
+
+CONT
     incf SIZEL, 1, 0
     btfsc STATUS, C, 0
     incf SIZEH, 1, 0
