@@ -18,14 +18,19 @@ LOADED EQU 0x02
 SENT EQU 0x03
 WORD EQU 0x04
 TIMES EQU 0x05
-
+HORIZ EQU 0x06
+LEDS_HZ EQU 0x07
+RIGHT_NOTLEFT EQU 0x08
+BLINK EQU 0x09
+ 
 ;*************
 ;* CONSTANTS *
 ;*************
 INIT_FSR0H EQU 0x00
 INIT_FSR0L EQU 0x80
-F_10HZ EQU 0x14
-F_5HZ EQU 0x28
+F_10HZ EQU 0x13
+F_5HZ EQU 0x27
+F_20HZ EQU 0x06
 LOAD_CONST EQU 0xFF
 SEND_BYTE EQU 0xFF
 END_BYTE EQU 0xFF
@@ -35,7 +40,7 @@ END_BYTE EQU 0xFF
 ;*********************************
     ORG 0x000000
 RESET_VECTOR
-    goto MAIN		
+    goto MAIN
 
     ORG 0x000008
 HI_INT_VECTOR
@@ -49,8 +54,9 @@ LOW_INT_VECTOR
 ;* RUTINES DE SERVEI D'INTERRUPCIÓ *
 ;***********************************
 HIGH_INT
+    call INIT_TMR
     incf TIMES, 1, 0
-    
+    incf LEDS_HZ, 1, 0
     retfie FAST
 
 ;*********
@@ -60,6 +66,13 @@ HIGH_INT
 INIT_VARS
     clrf SIZEH, 0
     clrf SIZEL, 0
+    
+    clrf HORIZ, 0
+    movlw F_5HZ
+    movwf BLINK, 0
+    
+    clrf RIGHT_NOTLEFT, 0
+    clrf LEDS_HZ, 0
     return
 	
 INIT_PORTS
@@ -70,24 +83,14 @@ INIT_PORTS
     bcf TRISB, 1, 0
     bcf TRISB, 0, 0
     clrf TRISD, 0
-    clrf LATD, 0
     return
     
 INIT_INTS
-    ;bcf RCON, IPEN, 0
-    ;movlw 0xA0
-    ;movwf INTCON, 0
-    ;movlw 0x88
-    ;movwf T0CON, 0
-    movlw 0x26
-    movwf TXSTA, 0
-    movlw 0x90
-    movwf RCSTA, 0
-    clrf BAUDCON, 0
-    bsf BAUDCON, 1, 0
-    movlw 0x81
-    movwf SPBRG, 0
-    clrf LATD, 0
+    bcf RCON, IPEN, 0
+    movlw 0xA0
+    movwf INTCON, 0
+    movlw 0x88
+    movwf T0CON, 0
     return
     
 INIT_TMR
@@ -106,93 +109,61 @@ MAIN
     call INIT_VARS
     call INIT_PORTS
     call INIT_INTS
-    ;call INIT_TMR
+    call INIT_TMR
 	
 BUCLE
-    btfsc PIR1, RCIF, 0
-    goto RX_PC
-    goto BUCLE	;ADDED
-WAIT
-    goto WAIT
+    tstfsz HORIZ
+    goto LEDS_HORIZ
+    tstfsz BLINK
+    goto LEDS_BLINK
+    goto BUCLE
     
-    ;COM CONY ESTAN SOLDATS ELS POLSADORS??
-CHECK_LOAD_BTN
-    btfsc PORTC, 1, 0
-    ;goto LOAD_BTN
+LEDS_HORIZ
+    movlw F_20HZ
+    cpfsgt LEDS_HZ
+    goto BUCLE
+    tstfsz RIGHT_NOTLEFT
+    goto MOVE_RIGHT
+
+MOVE_LEFT
+    clrf RIGHT_NOTLEFT
+    btfsc PORTB, 1, 0
+    goto MOVE_RIGHT
+    rlcf LATD, 1, 0
+    btfsc STATUS, C, 0
+    rlcf LATB, 1, 0
+    clrf LEDS_HZ, 0
+    goto BUCLE
+    
+MOVE_RIGHT
+    setf RIGHT_NOTLEFT
+    btfsc PORTD, 0, 0
+    goto MOVE_LEFT
+    rrcf LATB, 1, 0
+    rrcf LATD, 1, 0
+    clrf LEDS_HZ, 0
+    goto BUCLE
+    
+LEDS_BLINK
+    movlw BLINK
+    cpfsgt LEDS_HZ
+    goto BUCLE
+    tstfsz PORTD, 0
+    goto LEDS_OFF
     setf LATD, 0
-    clrf LOADED, 0
-    goto BUCLE
-    
-CHECK_SEND_BTN
-    btfsc PORTC, 0, 0
-    ;goto SEND_BTN
-    clrf LATD, 0
-    clrf SENT, 0
-    goto BUCLE	;AQUÍ FALTA EL TRACTAMENT DELS LEDS
-    
-CHECK_LEDS
-    movlw F_10HZ
-    cpfsgt TIMES, 0
-    goto BUCLE
-    movlw F_5HZ
-    cpfsgt TIMES, 0
-    goto LEDS_10HZ
-    goto LEDS_5HZ
-    
-LEDS_10HZ
-    
-LEDS_5HZ
-    
-RX_PC
-    ;setf LATD, 0
-    movff RCREG, LATD
-    goto BUCLE
-    
-    movlw LOAD_CONST
-    
-    cpfseq WORD, 0
-    ;goto SEND_MESSAGE
-    goto BUCLE ;ADDED
-    goto LOAD_MESSAGE
-    
-SEND_BTN
-    
-SEND_MESSAGE
-    
-LOAD_BTN
-    
-LOAD_MESSAGE
-    movlw INIT_FSR0H
-    movwf FSR0H, 0
-    movlw INIT_FSR0L
-    movwf FSR0L, 0
-    
-    clrf SIZEH, 0
-    clrf SIZEL, 0
-    
-    movlw SEND_BYTE
-    movwf TXREG, 0
-    
-READ_MESSAGE
-    btfss PIR1, RCIF, 0
-    goto READ_MESSAGE
-    movff RCREG, WORD
-    
-    movlw END_BYTE
-    cpfseq WORD, 0
-    goto CONT
+    setf LATB, 0
+    clrf LEDS_HZ, 0
     goto BUCLE
 
-CONT
-    incf SIZEL, 1, 0
-    btfsc STATUS, C, 0
-    incf SIZEH, 1, 0
+LEDS_OFF
+    clrf LATD, 0
+    clrf LATB, 0
+    clrf LEDS_HZ, 0
+    goto BUCLE
     
-    movff WORD, POSTINC0
-    movlw SEND_BYTE
-    movwf TXREG, 0
-    goto READ_MESSAGE
-    
+WAIT
+    goto WAIT
+
 ;*******
 ;* END *
 ;*******
