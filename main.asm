@@ -18,12 +18,15 @@ LOADED EQU 0x02
 SENT EQU 0x03
 WORD EQU 0x04
 TIMES EQU 0x05
+ 
+;VARIABLES LEDS
 HORIZ EQU 0x06
 LEDS_HZ EQU 0x07
 RIGHT_NOTLEFT EQU 0x08
 BLINK EQU 0x09
-N_CHAR EQU 0x0A
 DIV EQU 0x0B
+ 
+N_CHAR EQU 0x0A	    ;TEMPORAL
  
 ;*************
 ;* CONSTANTS *
@@ -33,8 +36,8 @@ INIT_FSR0L EQU 0x80
 F_10HZ EQU 0x13
 F_5HZ EQU 0x27
 F_20HZ EQU 0x06
-LOAD_CONST EQU 0xFF
-SEND_BYTE EQU 0xFF
+LOAD_BYTE EQU 0xAA
+SEND_BYTE EQU 0xEE
 END_BYTE EQU 0xFF
 
 ;*********************************
@@ -137,6 +140,63 @@ BUCLE
     goto LEDS_BLINK
     goto BUCLE
     
+RX_PC
+    movlw INIT_FSR0L
+    movwf FSR0L, 0
+    movlw INIT_FSR0H
+    movwf FSR0H, 0
+    movff RCREG, WORD
+    movlw LOAD_BYTE
+    cpfseq WORD, 0
+    goto SEND_MESSAGE
+    clrf SIZEL, 0
+    clrf SIZEH, 0
+
+DEMANA_CHAR
+    movlw SEND_BYTE
+    movwf TXREG, 0	;DEMANEM MÉS CARÀCTERS
+    btfss PIR1, RCIF, 0	;ESPEREM MÉS CARÀCTERS
+    goto $-2
+    
+    movff RCREG, WORD
+    movlw 0xFF
+    cpfseq WORD, 0
+    goto GUARDA_CHAR
+    tstfsz BLINK    ;TEMPORAL
+    goto END_ALT    ;TEMPORAL
+    movlw F_5HZ
+    movwf BLINK, 0
+    setf TXREG, 0
+    goto BUCLE
+    
+END_ALT		    ;TEMPORAL
+    clrf LATD, 0    ;TEMPORAL
+    clrf LATB, 0    ;TEMPORAL
+    clrf BLINK, 0   ;TEMPORAL
+    setf TXREG, 0   ;TEMPORAL
+    goto BUCLE	    ;TEMPORAL
+    
+GUARDA_CHAR
+    incf SIZEL, 1, 0
+    btfsc STATUS, C, 0
+    incf SIZEH, 1, 0
+    movff WORD, POSTINC0
+    goto DEMANA_CHAR
+    
+    
+    ;comf HORIZ, 1, 0
+    ;movlw 0x03
+    ;btfss HORIZ, 0, 0
+    ;movlw 0x00
+    ;movwf LATD, 0
+    ;clrf LATB, 0
+    ;goto BUCLE
+    
+SEND_MESSAGE
+    movlw SEND_BYTE
+    movwf TXREG, 0	;DEMANEM MÉS CARÀCTERS
+    goto BUCLE    
+    
 LEDS_HORIZ
     movlw F_20HZ
     cpfsgt LEDS_HZ
@@ -188,17 +248,8 @@ DIV_10
     mullw 0x33
     rrcf PRODH, 0, 0
     movwf DIV, 0
+    return
     
-RX_PC
-    movf RCREG, 0, 0
-    ;setf TXREG, 0
-    comf HORIZ, 1, 0
-    movlw 0x03
-    btfss HORIZ, 0, 0
-    movlw 0x00
-    movwf LATD, 0
-    clrf LATB, 0
-    goto BUCLE
     
 WAIT
     goto WAIT
