@@ -87,8 +87,6 @@ INIT_PORTS
     bcf TRISB, 1, 0
     bcf TRISB, 0, 0
     clrf TRISD, 0
-    ;movlw 0x03
-    ;movwf LATD, 0   ;HORIZ
     clrf LATD, 0
     clrf LATB, 0
     return
@@ -193,6 +191,7 @@ DIV_10
     
 RX_PC
     movf RCREG, 0, 0
+    ;setf TXREG, 0
     comf HORIZ, 1, 0
     movlw 0x03
     btfss HORIZ, 0, 0
