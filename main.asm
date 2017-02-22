@@ -27,6 +27,10 @@ BLINK EQU 0x09
 DIV EQU 0x0B
  
 N_CHAR EQU 0x0A	    ;TEMPORAL
+
+;VARIABLES BOTONS
+F_REBOTS_LOAD EQU 0x0B
+F_REBOTS_SEND EQU 0x0C
  
 ;*************
 ;* CONSTANTS *
@@ -138,6 +142,69 @@ BUCLE
     goto LEDS_HORIZ
     tstfsz BLINK
     goto LEDS_BLINK
+    
+CHECK_LOAD_BTN
+    btfsc PORTC, 1, 0
+    goto LOAD_BTN
+    clrf LOADED, 0
+    
+CHECK_LOAD_FLAG
+    tstfsz LOADED, 0
+    goto CHECK_SEND_BTN	
+    tstfsz F_REBOTS_LOAD
+    goto CHECK_LOAD_15MS
+    goto CHECK_SEND_BTN
+
+CHECK_LOAD_15MS
+    movlw 0x02
+    cpfsgt TIMES, 0
+    goto CHECK_SEND_BTN
+    clrf F_REBOTS_LOAD, 0
+    btfss PORTC, 1, 0
+    goto CHECK_SEND_BTN
+    ;FES COSES CÀRREGA DE FRASE
+    setf LOADED, 0
+    goto CHECK_SEND_BTN
+        
+LOAD_BTN
+    tstfsz LOADED, 0
+    goto CHECK_SEND_BTN	
+    tstfsz F_REBOTS_LOAD
+    goto CHECK_LOAD_15MS
+    clrf TIMES, 0
+    setf F_REBOTS_LOAD, 0
+    goto CHECK_SEND_BTN
+    
+CHECK_SEND_BTN
+    btfsc PORTC, 0, 0
+    goto SEND_BTN
+    clrf SENT, 0
+    
+CHECK_SEND_FLAG
+    tstfsz SENT, 0
+    goto BUCLE
+    tstfsz F_REBOTS_SEND
+    goto CHECK_SEND_15MS
+    goto BUCLE
+
+CHECK_SEND_15MS
+    movlw 0x02
+    cpfsgt TIMES, 0
+    goto BUCLE
+    clrf F_REBOTS_SEND, 0
+    btfss PORTC, 0, 0
+    goto BUCLE
+    ;FES COSES ENVIAMENT DE FRASE
+    setf SENT, 0
+    goto BUCLE
+        
+SEND_BTN
+    tstfsz SENT, 0
+    goto BUCLE	
+    tstfsz F_REBOTS_SEND
+    goto CHECK_SEND_15MS
+    clrf TIMES, 0
+    setf F_REBOTS_SEND, 0
     goto BUCLE
     
 RX_PC
@@ -227,16 +294,8 @@ LEDS_BLINK
     movlw BLINK
     cpfsgt LEDS_HZ
     goto BUCLE
-    tstfsz PORTD, 0
-    goto LEDS_OFF
-    setf LATD, 0
-    setf LATB, 0
-    clrf LEDS_HZ, 0
-    goto BUCLE
-
-LEDS_OFF
-    clrf LATD, 0
-    clrf LATB, 0
+    comf LATD, 1, 0
+    comf LATB, 1, 0
     clrf LEDS_HZ, 0
     goto BUCLE
     
