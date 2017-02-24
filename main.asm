@@ -27,7 +27,7 @@ PAPANATES_L EQU 0x12
 PAPANATES_H EQU 0x13
 LEDS_10S EQU 0x14
  
-WAIT EQU 0x09	    ;TEMPORAL
+WAIT EQU 0x09
 
 ;VARIABLES BOTONS
 F_REBOTS_LOAD EQU 0x0A
@@ -174,7 +174,7 @@ CHECK_LOAD_15MS
     goto CHECK_SEND_BTN
     clrf F_REBOTS_LOAD, 0
     btfss PORTC, 1, 0
-    goto END_ALT_LOAD	    ;TEMP
+    goto CHECK_SEND_BTN
     ;FES COSES CÀRREGA DE FRASE
     movlw SEND_BYTE
     movwf TXREG, 0
@@ -185,10 +185,6 @@ CHECK_LOAD_15MS
     ;FICOSES
     setf LOADED, 0
     goto CHECK_SEND_BTN
-    
-END_ALT_LOAD	    ;TEMP
-    clrf LATD, 0    ;TEMP
-    goto CHECK_SEND_BTN	;TEMP
         
 LOAD_BTN
     tstfsz LOADED, 0
@@ -217,17 +213,12 @@ CHECK_SEND_15MS
     goto BUCLE
     clrf F_REBOTS_SEND, 0
     btfss PORTC, 0, 0
-    goto END_ALT_SEND	;TEMP
+    goto BUCLE
     ;FES COSES ENVIAMENT DE FRASE
     setf LATD, 0
     ;FICOSES
     setf SENT, 0
     goto SEND_RF
-    ;goto BUCLE
-    
-END_ALT_SEND	    ;TEMP
-    clrf LATD, 0    ;TEMP
-    goto BUCLE	    ;TEMP
         
 SEND_BTN
     tstfsz SENT, 0
@@ -262,21 +253,12 @@ DEMANA_CHAR
     movlw 0xFF
     cpfseq WORD, 0
     goto GUARDA_CHAR
-    tstfsz BLINK    ;TEMPORAL
-    goto END_ALT    ;TEMPORAL
     movlw F_5HZ
     movwf BLINK, 0
     clrf LATD, 0
     clrf LATB, 0
     setf TXREG, 0
     goto BUCLE
-    
-END_ALT		    ;TEMPORAL
-    clrf LATD, 0    ;TEMPORAL
-    clrf LATB, 0    ;TEMPORAL
-    clrf BLINK, 0   ;TEMPORAL
-    setf TXREG, 0   ;TEMPORAL
-    goto BUCLE	    ;TEMPORAL
     
 GUARDA_CHAR
     incf SIZEL, 1, 0
@@ -285,20 +267,13 @@ GUARDA_CHAR
     movff WORD, POSTINC0
     goto DEMANA_CHAR
     
-    
-    ;comf HORIZ, 1, 0
-    ;movlw 0x03
-    ;btfss HORIZ, 0, 0
-    ;movlw 0x00
-    ;movwf LATD, 0
-    ;clrf LATB, 0
-    ;goto BUCLE
-    
 SEND_MESSAGE
     movlw SEND_BYTE
     movwf TXREG, 0	;ACK
     
 SEND_RF
+    clrf LEDS_10S, 0
+    clrf HORIZ, 0
     tstfsz SIZEL, 0
     goto RF_OK
     tstfsz SIZEH, 0
@@ -316,7 +291,6 @@ RF_OK
     clrf LATD, 0
     clrf LATB, 0
     clrf N_LEDS, 0
-    ;goto BUCLE
     
 SEND_RAM
     movlw INIT_FSR0H
