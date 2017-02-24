@@ -35,6 +35,7 @@ SENT EQU 0x0D
 N_SIZEL EQU 0x0E
 N_SIZEH EQU 0x0F
 INDEX EQU 0x10
+N_LEDS EQU 0x11
 
  
 ;*************
@@ -269,7 +270,11 @@ SEND_MESSAGE
     movlw SEND_BYTE
     movwf TXREG, 0	;ACK
     
-    goto BUCLE
+    call DIV_10
+    clrf LATD, 0
+    clrf LATB, 0
+    clrf N_LEDS, 0
+    ;goto BUCLE
     
 SEND_RAM
     movlw INIT_FSR0H
@@ -319,10 +324,30 @@ CHECK_WORD
     btfsc STATUS, C, 0
     incf N_SIZEH, 1, 0
     movff POSTINC0, WORD
+    
+    ;LEDS
+    incf N_LEDS, 1, 0
+    movf N_LEDS, 0, 0
+    cpfseq RES_DIV, 0
+    goto CHECK_SIZE
+    btfss PORTD, 7, 0
+    goto NEXT_LED
+    bsf LATB, 7, 0
+    rlncf LATB, 1, 0
+    
+NEXT_LED
+    bsf LATD, 7, 0
+    rlncf LATD, 1, 0
+    clrf N_LEDS, 0
+    ;FILEDS
+    
     goto CHECK_SIZE
     
 END_ENVIA_TRAMA
     call RF_0
+    setf LATB, 0
+    setf LATD, 0
+    clrf BLINK, 0   ;ADDED
     goto BUCLE
     
 RF_0
