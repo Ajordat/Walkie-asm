@@ -43,8 +43,8 @@ N_LEDS EQU 0x11
 ;*************
 INIT_FSR0H EQU 0x00
 INIT_FSR0L EQU 0x80
-F_10HZ EQU 0x13
 F_5HZ EQU 0x27
+F_10HZ EQU 0x13
 F_20HZ EQU 0x06
 LOAD_BYTE EQU 0xAA
 SEND_BYTE EQU 0xEE
@@ -83,10 +83,7 @@ INIT_VARS
     clrf SIZEH, 0
     clrf SIZEL, 0
     
-    clrf HORIZ, 0   ;HORIZ
-    
-    ;movlw F_5HZ
-    ;movwf BLINK, 0  ;BLINK
+    clrf HORIZ, 0
     clrf BLINK, 0
     
     clrf RIGHT_NOTLEFT, 0
@@ -169,12 +166,16 @@ CHECK_LOAD_15MS
     goto CHECK_SEND_BTN
     clrf F_REBOTS_LOAD, 0
     btfss PORTC, 1, 0
-    goto CHECK_SEND_BTN
+    goto END_ALT_LOAD	    ;TEMP
     ;FES COSES CÀRREGA DE FRASE
-    
-    ;ENDCODE
+    setf LATD, 0
+    ;FICOSES
     setf LOADED, 0
     goto CHECK_SEND_BTN
+    
+END_ALT_LOAD	    ;TEMP
+    clrf LATD, 0    ;TEMP
+    goto CHECK_SEND_BTN	;TEMP
         
 LOAD_BTN
     tstfsz LOADED, 0
@@ -203,10 +204,17 @@ CHECK_SEND_15MS
     goto BUCLE
     clrf F_REBOTS_SEND, 0
     btfss PORTC, 0, 0
-    goto BUCLE
+    goto END_ALT_SEND	;TEMP
     ;FES COSES ENVIAMENT DE FRASE
+    setf LATD, 0
+    ;FICOSES
     setf SENT, 0
-    goto BUCLE
+    goto SEND_RF
+    ;goto BUCLE
+    
+END_ALT_SEND	    ;TEMP
+    clrf LATD, 0    ;TEMP
+    goto BUCLE	    ;TEMP
         
 SEND_BTN
     tstfsz SENT, 0
@@ -273,6 +281,7 @@ SEND_MESSAGE
     movlw SEND_BYTE
     movwf TXREG, 0	;ACK
     
+SEND_RF
     call DIV_10
     clrf LATD, 0
     clrf LATB, 0
@@ -286,7 +295,7 @@ SEND_RAM
     movwf FSR0L, 0
     movff POSTINC0, WORD
     call RF_1
-    rrcf WORD, 1, 0
+    rlcf WORD, 1, 0
     btfsc STATUS, C, 0
     goto ENVIA_TRAMA
     call RF_0
@@ -306,7 +315,7 @@ CHECK_SIZE
     goto END_ENVIA_TRAMA
     
 BUCLE_WORD
-    rrcf WORD, 1, 0
+    rlcf WORD, 1, 0
     btfss STATUS, C, 0
     goto SEND_0
     call RF_0
@@ -350,7 +359,8 @@ END_ENVIA_TRAMA
     call RF_0
     setf LATB, 0
     setf LATD, 0
-    clrf BLINK, 0   ;ADDED
+    movlw F_10HZ
+    movwf BLINK, 0
     goto BUCLE
     
 RF_0
@@ -370,7 +380,7 @@ RF_1
 LEDS_HORIZ
     movlw F_20HZ
     cpfsgt LEDS_HZ
-    goto BUCLE
+    goto CHECK_LOAD_BTN
     tstfsz RIGHT_NOTLEFT
     goto MOVE_RIGHT
 
@@ -382,7 +392,7 @@ MOVE_LEFT
     btfsc STATUS, C, 0
     rlcf LATB, 1, 0
     clrf LEDS_HZ, 0
-    goto BUCLE
+    goto CHECK_LOAD_BTN
     
 MOVE_RIGHT
     setf RIGHT_NOTLEFT
@@ -391,16 +401,16 @@ MOVE_RIGHT
     rrcf LATB, 1, 0
     rrcf LATD, 1, 0
     clrf LEDS_HZ, 0
-    goto BUCLE
+    goto CHECK_LOAD_BTN
     
 LEDS_BLINK
-    movlw BLINK
+    movf BLINK, 0, 0
     cpfsgt LEDS_HZ
-    goto BUCLE
+    goto CHECK_LOAD_BTN
     comf LATD, 1, 0
     comf LATB, 1, 0
     clrf LEDS_HZ, 0
-    goto BUCLE
+    goto CHECK_LOAD_BTN
     
 DIV_10
     movf SIZEL, 0, 0
