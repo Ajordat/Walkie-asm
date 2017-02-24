@@ -96,6 +96,7 @@ INIT_VARS
 INIT_PORTS
     bsf TRISC, 7, 0
     bsf TRISC, 6, 0
+    bcf TRISC, 2, 0
     bsf TRISC, 1, 0
     bsf TRISC, 0, 0
     bcf TRISB, 1, 0
@@ -170,6 +171,8 @@ CHECK_LOAD_15MS
     btfss PORTC, 1, 0
     goto CHECK_SEND_BTN
     ;FES COSES CÀRREGA DE FRASE
+    
+    ;ENDCODE
     setf LOADED, 0
     goto CHECK_SEND_BTN
         
