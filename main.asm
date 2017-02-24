@@ -23,6 +23,9 @@ LEDS_HZ EQU 0x05
 RIGHT_NOTLEFT EQU 0x06
 BLINK EQU 0x07
 RES_DIV EQU 0x08
+PAPANATES_L EQU 0x12
+PAPANATES_H EQU 0x13
+LEDS_10S EQU 0x14
  
 WAIT EQU 0x09	    ;TEMPORAL
 
@@ -73,6 +76,9 @@ HIGH_INT
     incf TIMES, 1, 0
     incf LEDS_HZ, 1, 0
     clrf WAIT, 0
+    incf PAPANATES_L, 1, 0
+    btfsc STATUS, C, 0
+    incf PAPANATES_H, 1, 0
     retfie FAST
 
 ;*********
@@ -147,6 +153,8 @@ BUCLE
     goto LEDS_HORIZ
     tstfsz BLINK
     goto LEDS_BLINK
+    tstfsz LEDS_10S
+    goto LEDS_SEG
     
 CHECK_LOAD_BTN
     btfsc PORTC, 1, 0
@@ -169,7 +177,11 @@ CHECK_LOAD_15MS
     goto END_ALT_LOAD	    ;TEMP
     ;FES COSES CÀRREGA DE FRASE
     movlw SEND_BYTE
-    movwf TXREG, 0    
+    movwf TXREG, 0
+    setf LEDS_10S, 0
+    clrf PAPANATES_L, 0
+    clrf PAPANATES_H, 0
+    clrf BLINK, 0
     ;FICOSES
     setf LOADED, 0
     goto CHECK_SEND_BTN
@@ -227,6 +239,8 @@ SEND_BTN
     goto BUCLE
     
 RX_PC
+    clrf LEDS_10S, 0
+    clrf HORIZ, 0
     movlw INIT_FSR0L
     movwf FSR0L, 0
     movlw INIT_FSR0H
@@ -252,6 +266,8 @@ DEMANA_CHAR
     goto END_ALT    ;TEMPORAL
     movlw F_5HZ
     movwf BLINK, 0
+    clrf LATD, 0
+    clrf LATB, 0
     setf TXREG, 0
     goto BUCLE
     
@@ -283,7 +299,19 @@ SEND_MESSAGE
     movwf TXREG, 0	;ACK
     
 SEND_RF
+    tstfsz SIZEL, 0
+    goto RF_OK
+    tstfsz SIZEH, 0
+    goto RF_OK
+RF_KO
+    movlw 0x03
+    movwf LATD, 0
+    clrf LATB, 0
+    setf HORIZ, 0
+    clrf BLINK, 0
+    goto BUCLE
     
+RF_OK
     call DIV_10
     clrf LATD, 0
     clrf LATB, 0
@@ -412,6 +440,21 @@ LEDS_BLINK
     comf LATD, 1, 0
     comf LATB, 1, 0
     clrf LEDS_HZ, 0
+    goto CHECK_LOAD_BTN
+    
+LEDS_SEG
+    movlw 0xD0
+    cpfseq PAPANATES_L, 0
+    goto CHECK_LOAD_BTN
+    movlw 0x07
+    cpfseq PAPANATES_H, 0
+    goto CHECK_LOAD_BTN
+    clrf LEDS_10S, 0
+    movlw 0x03
+    movwf LATD, 0
+    clrf LATB, 0
+    setf HORIZ, 0
+    clrf BLINK, 0
     goto CHECK_LOAD_BTN
     
 DIV_10
