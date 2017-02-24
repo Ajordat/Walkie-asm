@@ -168,7 +168,8 @@ CHECK_LOAD_15MS
     btfss PORTC, 1, 0
     goto END_ALT_LOAD	    ;TEMP
     ;FES COSES CÀRREGA DE FRASE
-    setf LATD, 0
+    movlw SEND_BYTE
+    movwf TXREG, 0    
     ;FICOSES
     setf LOADED, 0
     goto CHECK_SEND_BTN
@@ -282,6 +283,7 @@ SEND_MESSAGE
     movwf TXREG, 0	;ACK
     
 SEND_RF
+    
     call DIV_10
     clrf LATD, 0
     clrf LATB, 0
