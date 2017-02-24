@@ -14,23 +14,28 @@
 
 SIZEH EQU 0x00
 SIZEL EQU 0x01
-LOADED EQU 0x02
-SENT EQU 0x03
-WORD EQU 0x04
-TIMES EQU 0x05
+WORD EQU 0x02
+TIMES EQU 0x03
  
 ;VARIABLES LEDS
-HORIZ EQU 0x06
-LEDS_HZ EQU 0x07
-RIGHT_NOTLEFT EQU 0x08
-BLINK EQU 0x09
-DIV EQU 0x0B
+HORIZ EQU 0x04
+LEDS_HZ EQU 0x05
+RIGHT_NOTLEFT EQU 0x06
+BLINK EQU 0x07
+RES_DIV EQU 0x08
  
-N_CHAR EQU 0x0A	    ;TEMPORAL
+WAIT EQU 0x09	    ;TEMPORAL
 
 ;VARIABLES BOTONS
-F_REBOTS_LOAD EQU 0x0B
-F_REBOTS_SEND EQU 0x0C
+F_REBOTS_LOAD EQU 0x0A
+F_REBOTS_SEND EQU 0x0B
+LOADED EQU 0x0C
+SENT EQU 0x0D
+ 
+N_SIZEL EQU 0x0E
+N_SIZEH EQU 0x0F
+INDEX EQU 0x10
+
  
 ;*************
 ;* CONSTANTS *
@@ -66,6 +71,7 @@ HIGH_INT
     call INIT_TMR
     incf TIMES, 1, 0
     incf LEDS_HZ, 1, 0
+    clrf WAIT, 0
     retfie FAST
 
 ;*********
@@ -261,8 +267,77 @@ GUARDA_CHAR
     
 SEND_MESSAGE
     movlw SEND_BYTE
-    movwf TXREG, 0	;DEMANEM MÉS CARÀCTERS
-    goto BUCLE    
+    movwf TXREG, 0	;ACK
+    
+    goto BUCLE
+    
+SEND_RAM
+    movlw INIT_FSR0H
+    movwf FSR0H, 0
+    movlw INIT_FSR0L
+    movwf FSR0L, 0
+    movff POSTINC0, WORD
+    call RF_1
+    rrcf WORD, 1, 0
+    btfsc STATUS, C, 0
+    goto ENVIA_TRAMA
+    call RF_0
+    
+ENVIA_TRAMA
+    movlw 0x01
+    movwf INDEX, 0
+    clrf N_SIZEL, 0
+    clrf N_SIZEH, 0
+    
+CHECK_SIZE
+    movf SIZEH, 0, 0
+    cpfseq N_SIZEH, 0
+    goto BUCLE_WORD
+    movf SIZEL, 0, 0
+    cpfslt N_SIZEL, 0
+    goto END_ENVIA_TRAMA
+    
+BUCLE_WORD
+    rrcf WORD, 1, 0
+    btfss STATUS, C, 0
+    goto SEND_0
+    call RF_0
+    call RF_1
+    goto CHECK_WORD
+    
+SEND_0
+    call RF_1
+    call RF_0
+    
+CHECK_WORD
+    incf INDEX, 1, 0
+    movlw 0x08
+    cpfseq INDEX, 0
+    goto BUCLE_WORD
+    clrf INDEX, 0
+    incf N_SIZEL, 1, 0
+    btfsc STATUS, C, 0
+    incf N_SIZEH, 1, 0
+    movff POSTINC0, WORD
+    goto CHECK_SIZE
+    
+END_ENVIA_TRAMA
+    call RF_0
+    goto BUCLE
+    
+RF_0
+    setf WAIT, 0
+    tstfsz WAIT, 0
+    goto $-2
+    bcf LATC, 2, 0
+    return
+    
+RF_1
+    setf WAIT, 0
+    tstfsz WAIT, 0
+    goto $-2
+    bsf LATC, 2, 0
+    return
     
 LEDS_HORIZ
     movlw F_20HZ
@@ -300,18 +375,18 @@ LEDS_BLINK
     goto BUCLE
     
 DIV_10
-    movf N_CHAR, 0, 0
-    addlw 0x01
+    movf SIZEL, 0, 0
+    addlw 0x02
     btfsc STATUS, C, 0
-    addlw 0xFF
+    incf SIZEH, 1, 0
     mullw 0x33
-    rrcf PRODH, 0, 0
-    movwf DIV, 0
+    movf PRODH, 0, 0
+    btfsc SIZEH, 0, 0
+    addlw 0x33
+    movwf RES_DIV, 0
+    rrcf RES_DIV, 1, 0
     return
     
-    
-WAIT
-    goto WAIT
 
 ;*******
 ;* END *
