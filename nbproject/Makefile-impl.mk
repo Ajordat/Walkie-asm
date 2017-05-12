@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=Walkie-asm.X
+PROJECTNAME=Walkie-asm
 
 # Active Configuration
 DEFAULTCONF=default

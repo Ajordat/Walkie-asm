@@ -1,4 +1,4 @@
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  1
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -9,7 +9,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00001         LIST
                       00002 
                       00003 ;==========================================================================
-                      00004 ; Build date : Sep 13 2016
+                      00004 ; Build date : Nov 17 2016
                       00005 ;  MPASM PIC18F4321 processor include
                       00006 ; 
                       00007 ;  (c) Copyright 1999-2016 Microchip Technology, All rights reserved
@@ -28,178 +28,679 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00012 ;* VARIABLES *
                       00013 ;*************
                       00014 
-  00000000            00015 SIZEH EQU 0x00
+  00000000            00015 SIZEH EQU 0x00  ;DUES VARIABLES PER SABER QUANTES LLETRES TENIM
   00000001            00016 SIZEL EQU 0x01
-  00000002            00017 LOADED EQU 0x02
-  00000003            00018 SENT EQU 0x03
-  00000004            00019 WORD EQU 0x04
-                      00020 
-                      00021 ;*************
-                      00022 ;* CONSTANTS *
-                      00023 ;*************
-  00000000            00024 INIT_FSR0H EQU 0x00
-  00000080            00025 INIT_FSR0L EQU 0x80
-  000000FF            00026 LOAD_CONST EQU 0xFF
-  000000FF            00027 SEND_BYTE EQU 0xFF
-  000000FF            00028 END_BYTE EQU 0xFF
-                      00029 
-                      00030 ;*********************************
-                      00031 ; VECTORS DE RESET I INTERRUPCIÓ *
-                      00032 ;*********************************
-                      00033     ORG 0x000000
-000000                00034 RESET_VECTOR
-000000 EF?? F???      00035     goto MAIN           
-                      00036 
-                      00037     ORG 0x000008
-000008                00038 HI_INT_VECTOR
-000008 EF?? F???      00039     goto HIGH_INT       
-                      00040 
-                      00041     ORG 0x000018
-000018                00042 LOW_INT_VECTOR
-000018 0011           00043     retfie FAST 
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  2
+  00000002            00017 WORD EQU 0x02   ;VARIABLE PER A LLEGIR LA TRANSMISSIÓ REBUDA
+  00000003            00018 TIMES EQU 0x03  ;VARIABLE PER A CONTROLAR EL REBOT DELS POLSADORS
+                      00019  
+                      00020 ;VARIABLES LEDS
+  00000004            00021 HORIZ EQU 0x04          ;QUAN ESTÀ ACTIVA REALITZA LA RUTINA DE "ROTACIÓ" DELS LEDS
+  00000005            00022 LEDS_HZ EQU 0x05        ;VARIABLE PER A CONTROLAR LA FREQÜÈNCIA DELS LEDS
+  00000006            00023 RIGHT_NOTLEFT EQU 0x06  ;INDICA EL SENTIT DE LA ROTACIÓ DELS LEDS 
+  00000007            00024 BLINK EQU 0x07          ;VARIABLE PER A CONTROLAR LA FREQÜÈNCIA DELS LEDS
+  00000008            00025 RES_DIV EQU 0x08        ;EMMAGATZEMEM EL RESULTAT DE LA DIVISIÓ PER 10
+  00000012            00026 SEG_L EQU 0x12          ;DUES VARIABLES PER A SABER EL TEMPS DELS 10 SEGONS
+  00000013            00027 SEG_H EQU 0x13
+  00000014            00028 LEDS_10S EQU 0x14       ;FLAG PER A SABER SI HEM D'ESTAR PENDENTS DELS 10 SEGONS
+                      00029  
+  00000009            00030 WAIT EQU 0x09   ;FLAG PER A ESPERAR A LA INTERRUPCIÓ PER LA TRANSMISSIÓ RF
+                      00031 
+                      00032 ;VARIABLES BOTONS
+  0000000A            00033 F_REBOTS_LOAD EQU 0x0A  ;FLAG PELS REBOTS DEL BOTÓ DE LOAD
+  0000000B            00034 F_REBOTS_SEND EQU 0x0B  ;FLAG PELS REBOTS DEL BOTÓ DE SEND
+  0000000C            00035 LOADED EQU 0x0C     ;FLAG PER SABER SI S'HA FET L'ACCIÓ DE CARREGAR 
+  0000000D            00036 SENT EQU 0x0D       ;FLAG PER SABER SI S'HA FET L'ACCIÓ D'ENVIAR 
+                      00037  
+  0000000E            00038 N_SIZEL EQU 0x0E    ;DUES VARIABLES PER A SABER QUANTES LLETRES PORTEM ENVIADES
+  0000000F            00039 N_SIZEH EQU 0x0F    
+  00000010            00040 INDEX EQU 0x10      ;VARIABLE PER SABER QUANTS BITS D'UNA PARAULA HEM ENVIAT
+  00000011            00041 N_LEDS EQU 0x11     ;VARIABLE PER SABER QUAN HEM D'ACTIVAR UN NOU LED DURANT LA TX DE RF
+                      00042 
+                      00043  
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00044 
-                      00045 ;***********************************
-                      00046 ;* RUTINES DE SERVEI D'INTERRUPCIÓ *
-                      00047 ;***********************************
-00001A                00048 HIGH_INT
-                      00049     ;codi de interrupció
-00001A 0011           00050     retfie FAST
-                      00051 
-                      00052 ;*********
-                      00053 ;* INITS *
-                      00054 ;*********
-                      00055         
-00001C                00056 INIT_VARS
-00001C 6A00           00057     clrf SIZEH, 0
-00001E 6A01           00058     clrf SIZEL, 0
-000020 0012           00059     return
-                      00060         
-000022                00061 INIT_PORTS
-000022 8E94           00062     bsf TRISC, 7, 0
-000024 8C94           00063     bsf TRISC, 6, 0
-000026 8294           00064     bsf TRISC, 1, 0
-000028 8094           00065     bsf TRISC, 0, 0
-00002A 9293           00066     bcf TRISB, 1, 0
-00002C 9093           00067     bcf TRISB, 0, 0
-00002E 6A95           00068     clrf TRISD, 0
-000030 0012           00069     return
-                      00070     
-000032                00071 INIT_INTS
-000032 9ED0           00072     bcf RCON, IPEN, 0
-000034 0EA0           00073     movlw 0xA0
-000036 6EF2           00074     movwf INTCON, 0
-000038 0E88           00075     movlw 0x88
-00003A 6ED5           00076     movwf T0CON, 0
-00003C 0E26           00077     movlw 0x26
-00003E 6EAC           00078     movwf TXSTA, 0
-000040 0E90           00079     movlw 0x90
-000042 6EAB           00080     movwf RCSTA, 0
-000044 6AB8           00081     clrf BAUDCON, 0
-000046 0E81           00082     movlw 0x81
-000048 6EAF           00083     movwf SPBRG, 0
-00004A 0012           00084     return
-                      00085     
-00004C                00086 INIT_TMR
-00004C 0E3C           00087     movlw 0x3C
-00004E 6ED7           00088     movwf TMR0H, 0
-000050 0EB0           00089     movlw 0xB0
-000052 6ED6           00090     movwf TMR0L, 0
-000054 94F2           00091     bcf INTCON, TMR0IF
-000056 0012           00092     return
-                      00093         
-                      00094 ;********
-                      00095 ;* MAIN *
-                      00096 ;********
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  3
+                      00044 ;*************
+                      00045 ;* CONSTANTS *
+                      00046 ;*************
+  00000000            00047 INIT_FSR0H EQU 0x00 ;VALOR DE FSR0H A L'INICI DE L'ARRAY
+  00000080            00048 INIT_FSR0L EQU 0x80 ;VALOR DE FSR0L A L'INICI DE L'ARRAY
+  00000000            00049 INIT_MSGH EQU 0x00
+  0000007E            00050 INIT_MSGL EQU 0x7E
+  00000004            00051 CAP_MSGH EQU 0x04
+  00000048            00052 CAP_MSGL EQU 0x48
+  00000013            00053 F_5HZ EQU 0x13      ;NOMBRE DE COPS QUE HA DE SALTAR LA INTERRUPCIÃ“ PER A QUE HAGI PASSAT UN PERÃ
+                            ODE DE 5HZ
+  00000009            00054 F_10HZ EQU 0x09     ;NOMBRE DE COPS QUE HA DE SALTAR LA INTERRUPCIÃ“ PER A QUE HAGI PASSAT UN PERÃ
+                            ODE DE 10HZ
+  00000006            00055 F_20HZ EQU 0x06     ;NOMBRE DE COPS QUE HA DE SALTAR LA INTERRUPCIÃ“ PER A QUE HAGI PASSAT UN PERÃ
+                            ODE DE 20HZ
+  000000AA            00056 LOAD_BYTE EQU 0xAA  ;BYTE QUE S'ENVIA DEL PC A LA PIC PER A INDICAR QUE S'HA DE CARREGAR A LA RAM. EQUIV
+                            ALENT A UN SYN.
+  000000EE            00057 SEND_BYTE EQU 0xEE  ;BYTE QUE S'ENVIA DE LA PIC AL PC PER A DEMANAR UN BYTE MÉS DE LA CADENA. EQUIVALEN
+                            T A UN ACK.
+  000000FF            00058 END_BYTE EQU 0xFF   ;BYTE QUE S'ENVIA DEL PC A LA PIC PER A INDICAR QUE JA S'HA ENVIAT TOTA LA CADENA. E
+                            QUIVALENT A UN FIN.
+  00000007            00059 SEG_10_H EQU 0x07   ;NOMBRE DE COPS QUE HA DE SALTAR LA INTERRUPCIÓ PER A QUE PASSIN 10 SEGONS (PART AL
+                            TA)
+  000000D0            00060 SEG_10_L EQU 0xD0   ;NOMBRE DE COPS QUE HA DE SALTAR LA INTERRUPCIÓ PER A QUE PASSIN 10 SEGONS (PART BA
+                            IXA)
+                      00061  
+                      00062 ;*********************************
+                      00063 ; VECTORS DE RESET I INTERRUPCIÓ *
+                      00064 ;*********************************
+                      00065     ORG 0x000000
+000000                00066 RESET_VECTOR
+000000 EF?? F???      00067     goto MAIN
+                      00068 
+                      00069     ORG 0x000008
+000008                00070 HI_INT_VECTOR
+000008 EF?? F???      00071     goto HIGH_INT       
+                      00072 
+                      00073     ORG 0x000018
+000018                00074 LOW_INT_VECTOR
+000018 0011           00075     retfie FAST 
+                      00076 
+                      00077 ;***********************************
+                      00078 ;* RUTINES DE SERVEI D'INTERRUPCIÓ *
+                      00079 ;***********************************
+                      00080 
+                      00081     ;* 
+                      00082     ; *   A LA INTERRUPCIÓ TORNEM A INICIAR EL TIMER PER A QUE TORNI A SALTAR AQUESTA, FIQUEM A 0 EL FL
+                            AG WAIT I 
+                      00083     ; *   INCREMENTEM ELS COMPTADORS QUE S'UTILITZEN A LES SEGÜENTS FUNCIONALITATS: CONTROLAR ELS REBOT
+                            S, CONTROLAR LA
+                      00084     ; *   FREQÜÈNCIA DELS LEDS I ESPERAR 10 SEGONS
+                      00085     ; */
+00001A                00086 HIGH_INT
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00097 
-000058                00098 MAIN
-000058 EC?? F???      00099     call INIT_VARS
-00005C EC?? F???      00100     call INIT_PORTS
-000060 EC?? F???      00101     call INIT_INTS
-000064 EC?? F???      00102     call INIT_TMR
-                      00103         
-000068                00104 BUCLE
-000068 BA9E           00105     btfsc PIR1, RCIF, 0
-00006A EF?? F???      00106     goto RX_PC
-                      00107         
-00006E                00108 CHECK_LOAD_BTN
-00006E B282           00109     btfsc PORTC, 1, 0
-000070 EF?? F???      00110     goto LOAD_BTN
-000074 6A02           00111     clrf LOADED, 0
-                      00112     
-000076                00113 CHECK_SEND_BTN
-000076 B082           00114     btfsc PORTC, 0, 0
-000078 EF?? F???      00115     goto SEND_BTN
-00007C 6A03           00116     clrf SENT, 0
-00007E EF?? F???      00117     goto BUCLE  ;AQUÍ FALTA EL TRACTAMENT DELS LEDS
+00001A EC?? F???      00087     call INIT_TMR
+00001E 2A03           00088     incf TIMES, 1, 0
+000020 2A05           00089     incf LEDS_HZ, 1, 0
+000022 6A09           00090     clrf WAIT, 0
+000024 2A12           00091     incf SEG_L, 1, 0
+000026 B0D8           00092     btfsc STATUS, C, 0
+000028 2A13           00093     incf SEG_H, 1, 0
+00002A 0011           00094     retfie FAST
+                      00095 
+                      00096 ;*********
+                      00097 ;* INITS *
+                      00098 ;*********
+                      00099         
+00002C                00100 INIT_VARS
+00002C 6A00           00101     clrf SIZEH, 0
+00002E 6A01           00102     clrf SIZEL, 0
+                      00103     
+000030 6A04           00104     clrf HORIZ, 0
+000032 6A07           00105     clrf BLINK, 0
+                      00106     
+000034 6A06           00107     clrf RIGHT_NOTLEFT, 0
+000036 6A05           00108     clrf LEDS_HZ, 0
+                      00109     
+000038 0E7E           00110     movlw INIT_MSGL
+00003A 6EE9           00111     movwf FSR0L, 0
+00003C 0E00           00112     movlw INIT_MSGH
+00003E 6EEA           00113     movwf FSR0H, 0
+000040 0E04           00114     movlw CAP_MSGH
+000042 6EEE           00115     movwf POSTINC0, 0
+000044 0E48           00116     movlw CAP_MSGL
+000046 6EEE           00117     movwf POSTINC0, 0
                       00118     
-000082                00119 RX_PC
-000082 CFAE F004      00120     movff RCREG, WORD
-000086 0EFF           00121     movlw LOAD_CONST
-000088 6204           00122     cpfseq WORD, 0
-00008A EF?? F???      00123     goto SEND_MESSAGE
-00008E EF?? F???      00124     goto LOAD_MESSAGE
-                      00125     
-000092                00126 SEND_BTN
-                      00127     
-000092                00128 SEND_MESSAGE
-                      00129     
-000092                00130 LOAD_BTN
-                      00131     
-000092                00132 LOAD_MESSAGE
-000092 0E00           00133     movlw INIT_FSR0H
-000094 6EEA           00134     movwf FSR0H, 0
-000096 0E80           00135     movlw INIT_FSR0L
-000098 6EE9           00136     movwf FSR0L, 0
-                      00137     
-00009A 6A00           00138     clrf SIZEH, 0
-00009C 6A01           00139     clrf SIZEL, 0
-                      00140     
-00009E 0EFF           00141     movlw SEND_BYTE
-0000A0 6EAD           00142     movwf TXREG, 0
-                      00143     
-0000A2                00144 READ_MESSAGE
-0000A2 AA9E           00145     btfss PIR1, RCIF, 0
-0000A4 EF?? F???      00146     goto $-2
-0000A8 CFAE F004      00147     movff RCREG, WORD
-                      00148     
-0000AC 0EFF           00149     movlw END_BYTE
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  4
+000048 0012           00119     return
+                      00120         
+00004A                00121 INIT_PORTS
+00004A 8E94           00122     bsf TRISC, 7, 0 ;SIO_RX     INPUT
+00004C 8C94           00123     bsf TRISC, 6, 0 ;SIO_TX     INPUT
+00004E 9494           00124     bcf TRISC, 2, 0 ;RF         OUTPUT
+000050 8294           00125     bsf TRISC, 1, 0 ;LOAD_BTN   INPUT
+000052 8094           00126     bsf TRISC, 0, 0 ;SEND_BTN   INPUT
+000054 9293           00127     bcf TRISB, 1, 0 ;LEDS[9]    OUTPUT
+000056 9093           00128     bcf TRISB, 0, 0 ;LEDS[8]    OUTPUT
+000058 6A95           00129     clrf TRISD, 0   ;LEDS[7..0] OUTPUT
+                      00130     
+00005A 6A8C           00131     clrf LATD, 0    ;APAGUEM ELS LEDS
+00005C 6A8A           00132     clrf LATB, 0
+                      00133     
+00005E 0012           00134     return
+                      00135     
+000060                00136 INIT_INTS
+000060 9ED0           00137     bcf RCON, IPEN, 0   ;ACTIVEM NOMÉS LA INTERRUPCIÓ DEL TIMER0
+000062 0EA0           00138     movlw 0xA0
+000064 6EF2           00139     movwf INTCON, 0
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0000AE 6204           00150     cpfseq WORD, 0
-0000B0 EF?? F???      00151     goto $+6
-0000B4 EF?? F???      00152     goto BUCLE
+000066 0E88           00140     movlw 0x88
+000068 6ED5           00141     movwf T0CON, 0
+00006A 0012           00142     return
+                      00143     
+00006C                00144 INIT_EUSART         ;INICIALITZEM L'EUSART
+00006C 0E26           00145     movlw 0x26
+00006E 6EAC           00146     movwf TXSTA, 0
+000070 0E90           00147     movlw 0x90
+000072 6EAB           00148     movwf RCSTA, 0
+000074 0E81           00149     movlw 0x81
+000076 6EAF           00150     movwf SPBRG, 0
+000078 6AB8           00151     clrf BAUDCON, 0
+00007A 0012           00152     return
                       00153     
-0000B8 2A01           00154     incf SIZEL, 1, 0
-0000BA B0D8           00155     btfsc STATUS, C, 0
-0000BC 2A00           00156     incf SIZEH, 1, 0
-                      00157     
-0000BE C004 FFEE      00158     movff WORD, POSTINC0
-0000C2 0EFF           00159     movlw SEND_BYTE
-0000C4 6EAD           00160     movwf TXREG, 0
-0000C6 EF?? F???      00161     goto READ_MESSAGE
-                      00162     
-                      00163 
-                      00164 ;*******
-                      00165 ;* END *
-                      00166 ;*******
-                      00167     END
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  5
+                      00154     ;INTERRUPCIÓ CADA 5ms
+00007C                00155 INIT_TMR
+00007C 0E3C           00156     movlw 0x3C
+00007E 6ED7           00157     movwf TMR0H, 0
+000080 0EB0           00158     movlw 0xB0
+000082 6ED6           00159     movwf TMR0L, 0
+000084 94F2           00160     bcf INTCON, TMR0IF
+000086 0012           00161     return
+                      00162         
+                      00163 ;********
+                      00164 ;* MAIN *
+                      00165 ;********
+                      00166 
+000088                00167 MAIN
+000088 EC?? F???      00168     call INIT_VARS
+00008C EC?? F???      00169     call INIT_PORTS
+000090 EC?? F???      00170     call INIT_INTS
+000094 EC?? F???      00171     call INIT_EUSART
+000098 EC?? F???      00172     call INIT_TMR
+                      00173         
+00009C                00174 BUCLE
+                      00175     ;COMPROVEM SI HEM REBUT UN BYTE DES DE L'ORDINADOR
+00009C BA9E           00176     btfsc PIR1, RCIF, 0
+00009E EF?? F???      00177     goto RX_PC
+                      00178     ;COMPROVEM SI HEM DE MOURE ELS LEDS EN HORITZONTAL (COCHE FANTASTICO)
+0000A2 6604           00179     tstfsz HORIZ
+0000A4 EF?? F???      00180     goto LEDS_HORIZ
+                      00181     ;COMPROVEM SI HEM DE PARPALLEJAR ELS LEDS
+0000A8 6607           00182     tstfsz BLINK
+0000AA EF?? F???      00183     goto LEDS_BLINK
+                      00184     ;COMPROVEM SI HEM DE COMPROVAR ELS 10 SEGONS
+0000AE 6614           00185     tstfsz LEDS_10S
+0000B0 EF?? F???      00186     goto LEDS_SEG
+                      00187     
+0000B4                00188 CHECK_LOAD_BTN
+                      00189     ;COMPROVEM SI EL POLSADOR DE LOAD ESTÀ ACTIU
+0000B4 B282           00190     btfsc PORTC, 1, 0
+0000B6 EF?? F???      00191     goto LOAD_BTN
+                      00192     ;SI NO ESTÀ ACTIU, BAIXEM EL FLAG QUE INDICA QUE JA HEM FET LA TASCA DE CARREGAR
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0000BA 6A0C           00193     clrf LOADED, 0
+                      00194     ;goto CHECK_SEND_BTN ?
+                      00195     
+0000BC                00196 CHECK_LOAD_FLAG
+                      00197     ;COMPROVEM SI JA HEM FET LA TASCA DE CARREGAR
+0000BC 660C           00198     tstfsz LOADED, 0
+0000BE EF?? F???      00199     goto CHECK_SEND_BTN 
+                      00200     ;EN CAS QUE NO HO HAGUEM FET, MIREM SI ESTEM EN "ZONA" DE REBOTS
+0000C2 660A           00201     tstfsz F_REBOTS_LOAD
+0000C4 EF?? F???      00202     goto CHECK_LOAD_15MS    ;SI HO ESTEM, MIREM SI JA HA PASSAT
+0000C8 EF?? F???      00203     goto CHECK_SEND_BTN     ;SI NO HO ESTEM, COMPROVEM EL POLSADOR DE SEND
+                      00204     
+0000CC                00205 CHECK_LOAD_15MS
+                      00206     ;MIREM SI JA HA PASSAT PROU TEMPS PER SALTAR ELS REBOTS
+0000CC 0E02           00207     movlw 0x02
+0000CE 6403           00208     cpfsgt TIMES, 0
+0000D0 EF?? F???      00209     goto CHECK_SEND_BTN
+                      00210     ;SI JA HA PASSAT EL TEMPS TORNEM A MIRAR SI DESPRÉS DELS REBOTS EL POLSADOR SEGUEIX ACTIU O NO
+                      00211     ;SI NO HO ESTÀ, ES TRACTAVA D'UN REBOT, ALTRAMENT ENS HAVIEN PITJAT
+0000D4 6A0A           00212     clrf F_REBOTS_LOAD, 0
+0000D6 A282           00213     btfss PORTC, 1, 0
+0000D8 EF?? F???      00214     goto CHECK_SEND_BTN
+                      00215     ;COM QUE ES TRACTA D'UNA INSTRUCCIÓ DE CARREGAR:
+                      00216     ;ENVIEM UNA PETICIÓ DE CADENA A L'ORDINADOR
+0000DC 0EEE           00217     movlw SEND_BYTE
+0000DE 6EAD           00218     movwf TXREG, 0
+                      00219     ;ACTIVEM EL FLAG QUE INDICA QUE HEM D'ESPERAR 10 SEGONS
+0000E0 6814           00220     setf LEDS_10S, 0
+                      00221     ;RESETEJEM EL COMPTADOR DELS 10 SEGONS
+0000E2 6A12           00222     clrf SEG_L, 0
+0000E4 6A13           00223     clrf SEG_H, 0
+                      00224     ;DESACTIVEM QUALSEVOL ACTIVITAT DELS LEDS
+0000E6 6A07           00225     clrf BLINK, 0
+0000E8 6A04           00226     clrf HORIZ, 0
+                      00227     ;ACTIVEM EL FLAG QUE INDICA QUE JA HEM FET LA FUNCIONALITAT DE CARREGAR
+0000EA 680C           00228     setf LOADED, 0
+0000EC EF?? F???      00229     goto CHECK_SEND_BTN
+                      00230         
+0000F0                00231 LOAD_BTN
+                      00232     ;COMPROVEM SI JA HEM FET LA CARREGA DE CADENA
+0000F0 660C           00233     tstfsz LOADED, 0
+0000F2 EF?? F???      00234     goto CHECK_SEND_BTN
+                      00235     ;SI NO L'HEM FET MIREM SI ESTEM EN ESPAI DE REBOTS
+0000F6 660A           00236     tstfsz F_REBOTS_LOAD
+                      00237     ;SI HI ESTEM, COMPROVEM SI JA HI HAURIEM DE SORTIR
+0000F8 EF?? F???      00238     goto CHECK_LOAD_15MS
+                      00239     ;SI NO HO ESTEM, HI ENTREM
+0000FC 6A03           00240     clrf TIMES, 0
+0000FE 680A           00241     setf F_REBOTS_LOAD, 0
+000100 EF?? F???      00242     goto CHECK_SEND_BTN
+                      00243     
+000104                00244 CHECK_SEND_BTN
+                      00245     ;COMPROVEM SI EL POLSADOR DE SEND ESTÀ ACTIU
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000104 B082           00246     btfsc PORTC, 0, 0
+000106 EF?? F???      00247     goto SEND_BTN
+                      00248     ;SI NO ESTÀ ACTIU, BAIXEM EL FLAG QUE INDICA QUE JA HEM FET LA TASCA D'ENVIAR
+00010A 6A0D           00249     clrf SENT, 0
+                      00250     ;goto BUCLE ?
+                      00251     
+00010C                00252 CHECK_SEND_FLAG
+                      00253     ;COMPROVEM SI JA HEM FET LA TASCA D'ENVIAR
+00010C 660D           00254     tstfsz SENT, 0
+00010E EF?? F???      00255     goto BUCLE
+                      00256     ;EN CAS QUE NO HO HAGUEM FET, MIREM SI ESTEM EN "ZONA" DE REBOTS
+000112 660B           00257     tstfsz F_REBOTS_SEND
+000114 EF?? F???      00258     goto CHECK_SEND_15MS    ;SI HO ESTEM, MIREM SI JA HA PASSAT
+000118 EF?? F???      00259     goto BUCLE              ;SI NO HO ESTEM, TORNEM A L'INICI DEL BUCLE
+                      00260 
+00011C                00261 CHECK_SEND_15MS
+                      00262     ;MIREM SI JA HA PASSAT PROU TEMPS PER SALTAR ELS REBOTS
+00011C 0E02           00263     movlw 0x02
+00011E 6403           00264     cpfsgt TIMES, 0
+000120 EF?? F???      00265     goto BUCLE
+                      00266     ;SI JA HA PASSAT EL TEMPS TORNEM A MIRAR SI DESPRÉS DELS REBOTS EL POLSADOR SEGUEIX ACTIU O NO
+                      00267     ;SI NO HO ESTÀ, ES TRACTAVA D'UN REBOT, ALTRAMENT ENS HAVIEN PITJAT
+000124 6A0B           00268     clrf F_REBOTS_SEND, 0
+000126 A082           00269     btfss PORTC, 0, 0
+000128 EF?? F???      00270     goto BUCLE
+                      00271     ;EN CAS QUE HAGUEM D'ENVIAR, ACTIVEM EL FLAG DE QUE JA HO HEM FET I HO FEM
+00012C 680D           00272     setf SENT, 0
+00012E EF?? F???      00273     goto SEND_RF
+                      00274         
+000132                00275 SEND_BTN
+                      00276     ;COMPROVEM SI JA HEM FET L'ENVIAMENT
+000132 660D           00277     tstfsz SENT, 0
+000134 EF?? F???      00278     goto BUCLE  
+                      00279     ;SI NO L'HEM FET MIREM SI ESTEM EN ESPAI DE REBOTS
+000138 660B           00280     tstfsz F_REBOTS_SEND
+                      00281     ;SI HI ESTEM, COMPROVEM SI JA HI HAURIEM DE SORTIR
+00013A EF?? F???      00282     goto CHECK_SEND_15MS
+                      00283     ;SI NO HO ESTEM, HI ENTREM
+00013E 6A03           00284     clrf TIMES, 0
+000140 680B           00285     setf F_REBOTS_SEND, 0
+000142 EF?? F???      00286     goto BUCLE
+                      00287     
+                      00288     ;SITUACIÓ EN LA QUE HEM REBUT UN BYTE PER LA SIO
+000146                00289 RX_PC
+                      00290     ;ATUREM EL COMPTADOR DELS 10 SEGONS I EL MOVIMENT HORITZONTAL
+000146 6A14           00291     clrf LEDS_10S, 0
+000148 6A04           00292     clrf HORIZ, 0
+                      00293     ;ENS SITUEM A L'INICI DE LA CADENA
+00014A 0E80           00294     movlw INIT_FSR0L
+00014C 6EE9           00295     movwf FSR0L, 0
+00014E 0E00           00296     movlw INIT_FSR0H
+000150 6EEA           00297     movwf FSR0H, 0
+                      00298     ;LLEGIM EL BYTE REBUT I MIREM SI ES TRACTA DEL CAS DE CARREGAR UNA CADENA A LA RAM O BÉ
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00299     ;S'HA D'ENVIAR PER RF EL CONTINGUT
+000152 CFAE F002      00300     movff RCREG, WORD
+000156 0EAA           00301     movlw LOAD_BYTE
+000158 6202           00302     cpfseq WORD, 0
+                      00303     ;S'HA DE TRANSMETRE PER RF
+00015A EF?? F???      00304     goto SEND_MESSAGE
+                      00305     ;S'HA DE CARREGAR UNA CADENA 
+                      00306     ;FIQUEM A ZERO EL COMPTADOR DE LLETRES DE LA CADENA
+                      00307     ;clrf SIZEL, 0
+00015E 0E02           00308     movlw 0x02
+000160 6E01           00309     movwf SIZEL, 0
+000162 6A00           00310     clrf SIZEH, 0
+                      00311     
+                      00312     ;COM QUE UTILITZEM UN PROTOCOL ORIENTAT A CONNEXIÓ, S'ESTABLEIX UN DIALEG, AIXÍ QUE PER ASSEGURAR 
+                            QUE NO 
+                      00313     ;ES PERDRÀ CAP BYTE L'ORDINADOR S'HA D'ESPERAR A QUE LA PIC LI CONTESTI
+000164                00314 DEMANA_CHAR
+                      00315     ;TRANSMETEM A L'ORDINADOR EL BYTE SEND_BYTE QUE VOL DIR QUE LI DEMANEM UN ALTRE CARÀCTER DE LA CADE
+                            NA
+000164 0EEE           00316     movlw SEND_BYTE
+000166 6EAD           00317     movwf TXREG, 0
+                      00318     ;ESPEREM QUE L'ORDINADOR ENS CONTESTI
+000168 AA9E           00319     btfss PIR1, RCIF, 0
+00016A EF?? F???      00320     goto $-2
+                      00321     ;LLEGIM EL BYTE REBUT I EL COMPAREM AMB EL BYTE QUE INDICA UN FINAL DE CADENA.
+00016E CFAE F002      00322     movff RCREG, WORD
+000172 0EFF           00323     movlw END_BYTE
+000174 6202           00324     cpfseq WORD, 0
+                      00325     ;SI ENCARA NO S'HA ACABAT LA CADENA, GUARDEM EL CARÀCTER REBUT A LA RAM
+000176 EF?? F???      00326     goto GUARDA_CHAR
+                      00327     ;SI S'HA ACABAT LA CÀRREGA FEM PARPALLEJAR ELS LEDS A 5HZ
+00017A 0E13           00328     movlw F_5HZ
+00017C 6E07           00329     movwf BLINK, 0
+00017E 6A8C           00330     clrf LATD, 0
+000180 6A8A           00331     clrf LATB, 0
+                      00332     ;INDIQUEM A L'ORDINADOR QUE HEM REBUT EL FINAL DE CADENA
+000182 0EFF           00333     movlw END_BYTE
+000184 6EAD           00334     movwf TXREG, 0
+                      00335     ;setf TXREG, 0
+000186 EF?? F???      00336     goto BUCLE
+                      00337     
+00018A                00338 GUARDA_CHAR
+                      00339     ;PER CADA BYTE QUE REBEM INCREMENTEM EL COMPTADOR DE MIDA DE LA CADENA
+00018A 2A01           00340     incf SIZEL, 1, 0
+00018C B0D8           00341     btfsc STATUS, C, 0
+00018E 2A00           00342     incf SIZEH, 1, 0
+                      00343     ;I ESCRIVIM EL NOU BYTE A LA RAM
+000190 C002 FFEE      00344     movff WORD, POSTINC0
+000194 EF?? F???      00345     goto DEMANA_CHAR
+                      00346     
+                      00347     ;SITUACIÓ EN LA QUE HEM DE TRANSMETRE EL CONTINGUT DE LA RAM PER RF
+000198                00348 SEND_MESSAGE
+                      00349     ;SI HEM REBUT L'INSTRUCCIÓ DE TRANSMISSIÓ PER LA SIO LI HEM DE CONTESTAR
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000198 0EEE           00350     movlw SEND_BYTE
+00019A 6EAD           00351     movwf TXREG, 0
+                      00352     
+00019C                00353 SEND_RF
+                      00354     ;ELIMINEM L'ACTIVITAT DELS LEDS
+00019C 6A14           00355     clrf LEDS_10S, 0
+00019E 6A04           00356     clrf HORIZ, 0
+                      00357     ;MIREM SI PODEM TRANSMETRE (TENIM CARREGAT UN MISSATGE)
+0001A0 6601           00358     tstfsz SIZEL, 0
+0001A2 EF?? F???      00359     goto RF_OK
+0001A6 6600           00360     tstfsz SIZEH, 0
+0001A8 EF?? F???      00361     goto RF_OK
+                      00362     
+0001AC                00363 RF_KO
+                      00364     ;SI NO PODEM TRANSMETRE PER RF INICIEM EL MOVIMENT HORITZONTAL DELS LEDS
+0001AC 0E03           00365     movlw 0x03
+0001AE 6E8C           00366     movwf LATD, 0
+0001B0 6A8A           00367     clrf LATB, 0
+0001B2 6804           00368     setf HORIZ, 0
+0001B4 6A07           00369     clrf BLINK, 0
+0001B6 EF?? F???      00370     goto BUCLE
+                      00371     
+0001BA                00372 RF_OK
+                      00373     ;EN CAS QUE SI QUE PODEM TRANSMETRE:
+                      00374     ;PER A ENCENDRE DE MANERA PROGRESSIVA ELS 10 LEDS NECESSITEM EL RESULTAT DE LA MIDA DE LA CADENA ENT
+                            RE 10
+                      00375     ;DIVIDIM ENTRE 10 I APAGUEM ELS LEDS
+0001BA EC?? F???      00376     call DIV_10
+0001BE 6A8C           00377     clrf LATD, 0
+0001C0 6A8A           00378     clrf LATB, 0
+0001C2 6A11           00379     clrf N_LEDS, 0
+                      00380     
+0001C4                00381 SEND_RAM
+                      00382     ;SITUEM EL PUNTER A L'INICI DE LA CADENA
+                      00383     ;movlw INIT_FSR0H
+0001C4 0E00           00384     movlw INIT_MSGH
+0001C6 6EEA           00385     movwf FSR0H, 0
+                      00386     ;movlw INIT_FSR0L
+0001C8 0E7E           00387     movlw INIT_MSGL
+0001CA 6EE9           00388     movwf FSR0L, 0
+                      00389     ;LLEGIM LA PARAULA A TRANSMETRE
+0001CC CFEE F002      00390     movff POSTINC0, WORD
+                      00391     ;ENVIEM UN FLANC POSITIU (L'HAUREM D'ENVIAR SI O SI, JA SIGUI PER LA PRIMERA PART L'UN 1 O LA SEGONA
+                             D'UN 0)
+0001D0 EC?? F???      00392     call RF_1
+                      00393     ;ROTEM LA PARAULA A ENVIAR CAP A L'ESQUERRA (TRANSMETEM DE MÉS A MENYS PES)
+0001D4 3602           00394     rlcf WORD, 1, 0
+0001D6 B0D8           00395     btfsc STATUS, C, 0
+                      00396     ;SI EL PRIMER BIT ÉS UN 1 JA PODEM TRANSMETRE LA RESTA DE PARAULES
+0001D8 EF?? F???      00397     goto ENVIA_TRAMA
+                      00398     ;SI EL PRIMER BIT ÉS UN 0 ENVIEM UN 0 ABANS DE TRANSMETRE LA RESTA DE PARAULES
+0001DC EC?? F???      00399     call RF_0
+                      00400     
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0001E0                00401 ENVIA_TRAMA
+                      00402     ;INICIALITZEM L'ÍNDEX DELS BITS DE LA PARAULA A 1 PERQUÈ JA HEM ENVIAT EL PRIMER
+0001E0 0E01           00403     movlw 0x01
+0001E2 6E10           00404     movwf INDEX, 0
+                      00405     ;INICIALITZEM L'ÍNDEX DE LES PARAULES A TRANSMETRE A 0. LA TRANSMISSIÓ ACABARÀ QUAN AQUEST COMPTA
+                            DOR VALGUI
+                      00406     ;EL MATEIX QUE LA MIDA DE LA CADENA
+0001E4 6A0E           00407     clrf N_SIZEL, 0
+0001E6 6A0F           00408     clrf N_SIZEH, 0
+                      00409     
+0001E8                00410 CHECK_SIZE
+                      00411     ;COMPAREM SI JA HEM TRANSMÈS TOTES LES LLETRES
+0001E8 5000           00412     movf SIZEH, 0, 0
+0001EA 620F           00413     cpfseq N_SIZEH, 0
+0001EC EF?? F???      00414     goto BUCLE_WORD
+0001F0 5001           00415     movf SIZEL, 0, 0
+0001F2 600E           00416     cpfslt N_SIZEL, 0
+                      00417     ;SI L'ÍNDEX HA SOBREPASSAT LA MIDA DEL MISSATGE VOL DIR QUE JA HEM ACABAT.
+0001F4 EF?? F???      00418     goto END_ENVIA_TRAMA
+                      00419     
+0001F8                00420 BUCLE_WORD
+                      00421     ;SI NO HEM ACABAT DE TRANSMETRE UNA PARAULA ENVIEM EL SEGÜENT BIT
+0001F8 3602           00422     rlcf WORD, 1, 0
+0001FA A0D8           00423     btfss STATUS, C, 0
+                      00424     ;SI ES TRACTA D'UN 0, PRIMER ENVIEM UN NIVELL A 5V I DESPRÉS UN A 0V
+0001FC EF?? F???      00425     goto SEND_0
+                      00426     
+                      00427     ;SI ES TRACTA D'UN 1, PRIMER ENVIEM UN NIVELL A 0V I DESPRÉS UN A 5V
+000200                00428 SEND_1
+000200 EC?? F???      00429     call RF_0
+000204 EC?? F???      00430     call RF_1
+000208 EF?? F???      00431     goto CHECK_WORD
+                      00432     
+00020C                00433 SEND_0
+00020C EC?? F???      00434     call RF_1
+000210 EC?? F???      00435     call RF_0
+                      00436     
+                      00437     ;COMPROVEM SI JA HEM ENVIAT TOTS ELS BITS D'UNA PARAULA
+000214                00438 CHECK_WORD
+000214 2A10           00439     incf INDEX, 1, 0
+000216 0E08           00440     movlw 0x08
+000218 6210           00441     cpfseq INDEX, 0
+                      00442     ;SI NO HEM ACABAT AMB LA PARAULA ANEM A TRANSMETRE EL SEGÜENT BIT
+00021A EF?? F???      00443     goto BUCLE_WORD
+                      00444     ;SI HEM ACABAT RESETEJEM L'ÍNDEX DELS BITS D'UN BYTE I AUGMENTEM L'ÍNDEX DE LLETRES TRANSMESES
+00021E 6A10           00445     clrf INDEX, 0
+000220 2A0E           00446     incf N_SIZEL, 1, 0
+000222 B0D8           00447     btfsc STATUS, C, 0
+000224 2A0F           00448     incf N_SIZEH, 1, 0
+000226 CFEE F002      00449     movff POSTINC0, WORD
+                      00450     ;LEDS
+                      00451     ;AUGMENTEM TAMBÉ L'ÍNDEX DE LA PROPORCIÓ DE LLETRES TRANSMESES.
+                      00452     ;QUAN AQUEST ÍNDEX ARRIBA AL RESULTAT DE LA DIVISIÓ VOL DIR QUE HEM D'ENCENDRE UN LED MÉS
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00022A 2A11           00453     incf N_LEDS, 1, 0
+00022C 5011           00454     movf N_LEDS, 0, 0
+00022E 6208           00455     cpfseq RES_DIV, 0
+                      00456     ;SI NO HEM D'ENCENDRE UN ALTRE LED TORNEM A AGAFAR UN NOU BYTE DE LA RAM
+000230 EF?? F???      00457     goto CHECK_SIZE    
+                      00458     ;SI EL BIT DE MÉS PES DEL PORTD ESTÀ ACTIU VOL DIR QUE JA HEM OMPLERT UN REGISTRE, AIXÍ QUE HEM D
+                            E MOURE 
+                      00459     ;DEL SEGON REGISTRE DE LEDS (PORTB)
+000234 AE83           00460     btfss PORTD, 7, 0
+                      00461     ;SI NO HEM OMPLERT EL PORTD
+000236 EF?? F???      00462     goto NEXT_LED
+                      00463     ;SI JA HEM OMPLERT EL PORTD
+00023A 8E8A           00464     bsf LATB, 7, 0
+00023C 468A           00465     rlncf LATB, 1, 0
+                      00466     
+00023E                00467 NEXT_LED
+                      00468     ;PER A ENCENDRE PROGRESSIVAMENT ELS LEDS ACTIVEM EL BIT DE MÉS PES I ROTEM SENSE CARRY CAP A L'ESQU
+                            ERRA
+00023E 8E8C           00469     bsf LATD, 7, 0
+000240 468C           00470     rlncf LATD, 1, 0
+000242 6A11           00471     clrf N_LEDS, 0
+000244 EF?? F???      00472     goto CHECK_SIZE
+                      00473     
+000248                00474 END_ENVIA_TRAMA
+                      00475     ;SI JA HEM ACABAT DE TRANSMETRE L'ÚLTIM BIT DE L'ÚLTIM BYTE ENS ESPEREM A QUE AQUEST ESTIGUI EL SE
+                            U TEMPS EN
+                      00476     ;L'ESTAT PERTINENT I DESPRÉS BAIXEM EL SENYAL DE TRANSMISSIÓ
+000248 EC?? F???      00477     call RF_0
+                      00478     ;JA HEM ENVIAT TOTS ELS BITS, AIXÃ’ IMPLICA EL 100% DE CARÃ€CTERS ENVIATS, AIXÃ QUE ACTIVEM
+                             TOTS ELS LEDS
+                      00479     ;(REALMENT UNA MICA INNECESSARI JA QUE DE SEGUIDA VA AL BUCLE I INICIA EL PARPALLEIG)
+00024C 688A           00480     setf LATB, 0
+00024E 688C           00481     setf LATD, 0
+                      00482     ;ACTIVA EL PARPALLEIG A 10HZ
+000250 0E09           00483     movlw F_10HZ
+000252 6E07           00484     movwf BLINK, 0
+000254 EF?? F???      00485     goto BUCLE
+                      00486     
+000258                00487 RF_0
+                      00488     ;FUNCIÃ“ QUE S'ESPERA A QUE SALTI UNA INTERRUPCIÃ“ I DESPRÃ‰S FICA A 0 LA TRANSMISSIÃ“ R
+                            F
+000258 6809           00489     setf WAIT, 0
+00025A 6609           00490     tstfsz WAIT, 0
+00025C EF?? F???      00491     goto $-2
+000260 948B           00492     bcf LATC, 2, 0
+000262 0012           00493     return
+                      00494     
+000264                00495 RF_1
+                      00496     ;FUNCIÃ“ QUE S'ESPERA A QUE SALTI UNA INTERRUPCIÃ“ I DESPRÃ‰S FICA A 1 LA TRANSMISSIÃ“ R
+                            F
+000264 6809           00497     setf WAIT, 0
+000266 6609           00498     tstfsz WAIT, 0
+000268 EF?? F???      00499     goto $-2
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00026C 848B           00500     bsf LATC, 2, 0
+00026E 0012           00501     return
+                      00502     
+000270                00503 LEDS_HORIZ
+                      00504     ;ARRIBEM EN AQUEST CAS SI HEM DE MOURE HORITZONTALMENT ELS LEDS
+000270 0E06           00505     movlw F_20HZ
+000272 6405           00506     cpfsgt LEDS_HZ
+                      00507     ;SI NO HA PASSAT PROU TEMPS COM PER CANVIAR L'ESTAT DELS LEDS ANEM AL SEGÃœENT CONDICIONAL DEL BUC
+                            LE
+000274 EF?? F???      00508     goto CHECK_LOAD_BTN
+000278 6606           00509     tstfsz RIGHT_NOTLEFT
+                      00510     ;MOVIMENT A LA DRETA
+00027A EF?? F???      00511     goto MOVE_RIGHT
+                      00512     
+                      00513     ;MOVIMENT A L'ESQUERRA
+00027E                00514 MOVE_LEFT
+                      00515     ;EL MOVIMENT FUNCIONA DE LA SEGÃœENT MANERA: SI HEM ARRIBAT AL BIT RB1 VOL DIR QUE HEM DE CANVIAR 
+                            DE DIRECCIÃ“.
+                      00516     ;EN CAS CONTRARI ROTEM AMB CARRY CAP A L'ESQUERRA EL REGISTRE LATD. SI HI HA CARRY ROTEM EL LATB.
+00027E 6A06           00517     clrf RIGHT_NOTLEFT
+000280 B281           00518     btfsc PORTB, 1, 0
+000282 EF?? F???      00519     goto MOVE_RIGHT
+000286 368C           00520     rlcf LATD, 1, 0
+000288 B0D8           00521     btfsc STATUS, C, 0
+00028A 368A           00522     rlcf LATB, 1, 0
+                      00523     ;RESETEJEM EL COMPTADOR DE FREQÃœÃˆNCIA DELS LEDS
+00028C 6A05           00524     clrf LEDS_HZ, 0
+00028E EF?? F???      00525     goto CHECK_LOAD_BTN
+                      00526     
+000292                00527 MOVE_RIGHT
+                      00528     ;EL MOVIMENT FUNCIONA DE LA SEGÃœENT MANERA: SI HEM ARRIBAT AL BIT RD0 VOL DIR QUE HEM DE CANVIAR 
+                            DE DIRECCIÃ“.
+                      00529     ;EN CAS CONTRARI ROTEM AMB CARRY CAP A LA DRETA EL REGISTRE LATB I EL LATD.
+000292 6806           00530     setf RIGHT_NOTLEFT
+000294 B083           00531     btfsc PORTD, 0, 0
+000296 EF?? F???      00532     goto MOVE_LEFT
+00029A 328A           00533     rrcf LATB, 1, 0
+00029C 328C           00534     rrcf LATD, 1, 0
+                      00535     ;RESETEJEM EL COMPTADOR DE FREQÃœÃˆNCIA DELS LEDS
+00029E 6A05           00536     clrf LEDS_HZ, 0
+0002A0 EF?? F???      00537     goto CHECK_LOAD_BTN
+                      00538     
+0002A4                00539 LEDS_BLINK
+                      00540     ;SI VOLEM PARPELLEJAR ELS LEDS ESCRIVIM A BLINK LA FREQÃœÃˆNCIA A LA QUE VOLEM FER-HO.
+0002A4 5007           00541     movf BLINK, 0, 0
+0002A6 6405           00542     cpfsgt LEDS_HZ
+                      00543     ;SI NO HA PASSAT PROU TEMPS COM PER CANVIAR L'ESTAT DELS LEDS ANEM AL SEGÃœENT CONDICIONAL DEL BUC
+                            LE
+0002A8 EF?? F???      00544     goto CHECK_LOAD_BTN
+                      00545     ;NEGUEM ELS LEDS, RESETEJEM LA VARIABLE DE FRQÃœÃˆNCIA DELS LEDS I ANEM AL SEGÃœENT CONDICIONA
+                            L DEL BUCLE
+0002AC 1E8C           00546     comf LATD, 1, 0
+0002AE 1E8A           00547     comf LATB, 1, 0
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0002B0 6A05           00548     clrf LEDS_HZ, 0
+0002B2 EF?? F???      00549     goto CHECK_LOAD_BTN
+                      00550     
+0002B6                00551 LEDS_SEG
+                      00552     ;MIREM SI JA HAN PASSAT 10 SEGONS
+0002B6 0ED0           00553     movlw SEG_10_L
+0002B8 6212           00554     cpfseq SEG_L, 0
+0002BA EF?? F???      00555     goto CHECK_LOAD_BTN
+0002BE 0E07           00556     movlw SEG_10_H
+0002C0 6213           00557     cpfseq SEG_H, 0
+0002C2 EF?? F???      00558     goto CHECK_LOAD_BTN
+                      00559     ;SI JA HAN PASSAT DESACTIVEM EL FLAG PER A COMPTAR 10 SEGONS I ACTIVEM EL MOVIMENT HORITZONTAL
+0002C6 6A14           00560     clrf LEDS_10S, 0
+0002C8 0E03           00561     movlw 0x03
+0002CA 6E8C           00562     movwf LATD, 0
+0002CC 6A8A           00563     clrf LATB, 0
+0002CE 6804           00564     setf HORIZ, 0
+0002D0 6A07           00565     clrf BLINK, 0
+0002D2 EF?? F???      00566     goto CHECK_LOAD_BTN
+                      00567     
+0002D6                00568 DIV_10
+                      00569     ;FUNCIÃ“ PER A DIVIDIR SIZE ENTRE 10 I DEIXAR EL RESULTAT A RES_DIV. EL PROCEDIMENT PER A OBTENIR
+                             EL RESULTAT Ã‰S
+                      00570     ;EL SEGÃœENT:
+                      00571     ;SUMEM DOS AL VALOR DE LA PART BAIXA DE SIZE
+0002D6 5001           00572     movf SIZEL, 0, 0
+0002D8 0F02           00573     addlw 0x02
+                      00574     ;EN CAS QUE ES DONI OVERFLOW AUGMENTEM LA PART ALTA DE SIZE
+0002DA B0D8           00575     btfsc STATUS, C, 0
+0002DC 2A00           00576     incf SIZEH, 1, 0
+                      00577     ;MULTIPLIQUEM (SIZEL+2) PER 51
+0002DE 0D33           00578     mullw 0x33
+                      00579     ;DEL RESULTAT NOMÃ‰S ENS INTERESSA LA PART ALTA
+0002E0 50F4           00580     movf PRODH, 0, 0
+                      00581     ;SI LA PART ALTA DE SIZE Ã‰S DIFERENT A 0 SUMEM 51 AL RESULTAT
+0002E2 B000           00582     btfsc SIZEH, 0, 0
+0002E4 0F33           00583     addlw 0x33
+0002E6 6E08           00584     movwf RES_DIV, 0
+                      00585     ;DIVIDEM EL RESULTAT OBTINGUT FINS EL MOMENT ENTRE 2
+0002E8 3208           00586     rrcf RES_DIV, 1, 0
+0002EA 0012           00587     return
+                      00588     
+                      00589 
+                      00590 ;*******
+                      00591 ;* END *
+                      00592 ;*******
+                      00593     END
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 13
 
 
 SYMBOL TABLE
@@ -257,17 +758,19 @@ BCLIF                             00000003
 BCLIP                             00000003
 BF                                00000000
 BGST                              00000005
-BOR                               00000000
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  6
+BLINK                             00000007
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 14
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+BOR                               00000000
 BRG16                             00000003
 BRGH                              00000002
 BSR                               00000FE0
-BUCLE                             00000068
+BUCLE                             0000009C
+BUCLE_WORD                        000001F8
 C                                 00000000
 C1INV                             00000004
 C1N                               00000000
@@ -279,6 +782,8 @@ C2N                               00000001
 C2OUT_CMCON                       00000007
 C2OUT_PORTA                       00000005
 C2P                               00000002
+CAP_MSGH                          00000004
+CAP_MSGL                          00000048
 CCP1                              00000002
 CCP1CON                           00000FBD
 CCP1IE                            00000002
@@ -309,20 +814,26 @@ CCPR2                             00000FBB
 CCPR2H                            00000FBC
 CCPR2L                            00000FBB
 CFGS                              00000006
-CHECK_LOAD_BTN                    0000006E
-CHECK_SEND_BTN                    00000076
+CHECK_LOAD_15MS                   000000CC
+CHECK_LOAD_BTN                    000000B4
+CHECK_LOAD_FLAG                   000000BC
+CHECK_SEND_15MS                   0000011C
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 15
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CHECK_SEND_BTN                    00000104
+CHECK_SEND_FLAG                   0000010C
+CHECK_SIZE                        000001E8
+CHECK_WORD                        00000214
 CHS0                              00000002
 CHS1                              00000003
 CHS2                              00000004
 CHS3                              00000005
 CIS                               00000003
 CK                                00000006
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  7
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 CKE                               00000006
 CKP                               00000004
 CLKI                              00000007
@@ -358,12 +869,20 @@ DDRB                              TRISB
 DDRC                              TRISC
 DDRD                              TRISD
 DDRE                              TRISE
+DEMANA_CHAR                       00000164
+DIV_10                            000002D6
 DONE                              00000001
 D_A                               00000005
 D_NOT_A                           00000005
 ECCP1AS                           00000FB6
 ECCP1CON                          00000FBD
 ECCP1DEL                          00000FB7
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 16
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 ECCPAS0                           00000004
 ECCPAS1                           00000005
 ECCPAS2                           00000006
@@ -376,13 +895,9 @@ EEIE                              00000004
 EEIF                              00000004
 EEIP                              00000004
 EEPGD                             00000007
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  8
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 END_BYTE                          000000FF
+END_ENVIA_TRAMA                   00000248
+ENVIA_TRAMA                       000001E0
 FAST                              00000001
 FERR                              00000002
 FLT0                              00000000
@@ -397,6 +912,11 @@ FSR1L                             00000FE1
 FSR2                              00000002
 FSR2H                             00000FDA
 FSR2L                             00000FD9
+F_10HZ                            00000009
+F_20HZ                            00000006
+F_5HZ                             00000013
+F_REBOTS_LOAD                     0000000A
+F_REBOTS_SEND                     0000000B
 GCEN                              00000007
 GIE                               00000007
 GIEH                              00000007
@@ -405,6 +925,7 @@ GIE_GIEH                          00000007
 GO                                00000001
 GO_DONE                           00000001
 GO_NOT_DONE                       00000001
+GUARDA_CHAR                       0000018A
 HIGH_INT                          0000001A
 HI_INT_VECTOR                     00000008
 HLVDCON                           00000FD2
@@ -415,32 +936,37 @@ HLVDIN                            00000005
 HLVDIP                            00000002
 HLVDL0                            00000000
 HLVDL1                            00000001
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 17
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 HLVDL2                            00000002
 HLVDL3                            00000003
+HORIZ                             00000004
 IBF                               00000007
 IBOV                              00000005
 IDLEN                             00000007
+INDEX                             00000010
 INDF0                             00000FEF
 INDF1                             00000FE7
 INDF2                             00000FDF
+INIT_EUSART                       0000006C
 INIT_FSR0H                        00000000
 INIT_FSR0L                        00000080
-INIT_INTS                         00000032
-INIT_PORTS                        00000022
-INIT_TMR                          0000004C
-INIT_VARS                         0000001C
+INIT_INTS                         00000060
+INIT_MSGH                         00000000
+INIT_MSGL                         0000007E
+INIT_PORTS                        0000004A
+INIT_TMR                          0000007C
+INIT_VARS                         0000002C
 INT0                              00000000
 INT0E                             00000004
 INT0F                             00000001
 INT0IE                            00000004
 INT0IF                            00000001
 INT1                              00000001
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE  9
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 INT1E                             00000003
 INT1F                             00000000
 INT1IE                            00000003
@@ -469,6 +995,12 @@ IRCF0                             00000004
 IRCF1                             00000005
 IRCF2                             00000006
 IRVST                             00000005
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 18
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 KBI0                              00000004
 KBI1                              00000005
 KBI2                              00000006
@@ -494,12 +1026,6 @@ LATB7                             00000007
 LATC                              00000F8B
 LATC0                             00000000
 LATC1                             00000001
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 10
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 LATC2                             00000002
 LATC3                             00000003
 LATC4                             00000004
@@ -519,11 +1045,21 @@ LATE                              00000F8D
 LATE0                             00000000
 LATE1                             00000001
 LATE2                             00000002
-LOADED                            00000002
-LOAD_BTN                          00000092
-LOAD_CONST                        000000FF
-LOAD_MESSAGE                      00000092
+LEDS_10S                          00000014
+LEDS_BLINK                        000002A4
+LEDS_HORIZ                        00000270
+LEDS_HZ                           00000005
+LEDS_SEG                          000002B6
+LOADED                            0000000C
+LOAD_BTN                          000000F0
+LOAD_BYTE                         000000AA
 LOW_INT_VECTOR                    00000018
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 19
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 LVDCON                            00000FD2
 LVDEN                             00000004
 LVDIE                             00000002
@@ -537,9 +1073,12 @@ LVV0                              00000000
 LVV1                              00000001
 LVV2                              00000002
 LVV3                              00000003
-MAIN                              00000058
+MAIN                              00000088
 MCLR                              00000003
+MOVE_LEFT                         0000027E
+MOVE_RIGHT                        00000292
 N                                 00000004
+NEXT_LED                          0000023E
 NOT_A                             00000005
 NOT_ADDRESS                       00000005
 NOT_BOR                           00000000
@@ -553,17 +1092,14 @@ NOT_RD                            00000000
 NOT_RI                            00000004
 NOT_SS                            00000005
 NOT_T1SYNC                        00000002
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 11
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 NOT_T3SYNC                        00000002
 NOT_TO                            00000003
 NOT_W                             00000002
 NOT_WR                            00000001
 NOT_WRITE                         00000002
+N_LEDS                            00000011
+N_SIZEH                           0000000F
+N_SIZEL                           0000000E
 OBF                               00000006
 OERR                              00000001
 OSC1                              00000007
@@ -577,6 +1113,12 @@ OSTS                              00000003
 OV                                00000003
 P                                 00000004
 P1A                               00000002
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 20
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 P1B                               00000005
 P1C                               00000006
 P1D                               00000007
@@ -612,12 +1154,6 @@ PLLEN                             00000006
 PLUSW0                            00000FEB
 PLUSW1                            00000FE3
 PLUSW2                            00000FDB
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 12
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 POR                               00000001
 PORTA                             00000F80
 PORTB                             00000F81
@@ -636,6 +1172,12 @@ PREINC1                           00000FE4
 PREINC2                           00000FDC
 PROD                              00000FF3
 PRODH                             00000FF4
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 21
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 PRODL                             00000FF3
 PRSEN                             00000007
 PSA                               00000003
@@ -671,12 +1213,6 @@ RB2                               00000002
 RB3                               00000003
 RB4                               00000004
 RB5                               00000005
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 13
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 RB6                               00000006
 RB7                               00000007
 RBIE                              00000003
@@ -695,6 +1231,12 @@ RCEN                              00000003
 RCIDL                             00000006
 RCIE                              00000005
 RCIF                              00000005
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 22
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 RCIP                              00000005
 RCMT                              00000006
 RCON                              00000FD0
@@ -714,15 +1256,20 @@ RE0                               00000000
 RE1                               00000001
 RE2                               00000002
 RE3                               00000003
-READ_MESSAGE                      000000A2
 RESET_VECTOR                      00000000
+RES_DIV                           00000008
+RF_0                              00000258
+RF_1                              00000264
+RF_KO                             000001AC
+RF_OK                             000001BA
 RI                                00000004
+RIGHT_NOTLEFT                     00000006
 RSEN                              00000001
 RX                                00000007
 RX9                               00000006
 RX9D                              00000000
 RXDTP                             00000005
-RX_PC                             00000082
+RX_PC                             00000146
 R_NOT_W                           00000002
 R_W                               00000002
 S                                 00000003
@@ -730,23 +1277,31 @@ SBOREN                            00000006
 SCK                               00000003
 SCKP                              00000004
 SCL                               00000003
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 14
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 SCS0                              00000000
 SCS1                              00000001
 SDA                               00000004
 SDI                               00000004
 SDO                               00000005
+SEG_10_H                          00000007
+SEG_10_L                          000000D0
+SEG_H                             00000013
+SEG_L                             00000012
 SEN                               00000000
 SENDB                             00000003
-SEND_BTN                          00000092
-SEND_BYTE                         000000FF
-SEND_MESSAGE                      00000092
-SENT                              00000003
+SEND_0                            0000020C
+SEND_1                            00000200
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 23
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SEND_BTN                          00000132
+SEND_BYTE                         000000EE
+SEND_MESSAGE                      00000198
+SEND_RAM                          000001C4
+SEND_RF                           0000019C
+SENT                              0000000D
 SIZEH                             00000000
 SIZEL                             00000001
 SMP                               00000007
@@ -789,17 +1344,17 @@ T0CS                              00000005
 T0IE                              00000005
 T0IF                              00000002
 T0PS0                             00000000
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 15
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 T0PS1                             00000001
 T0PS2                             00000002
 T0SE                              00000004
 T13CKI                            00000000
 T1CKI                             00000000
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 24
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 T1CKPS0                           00000004
 T1CKPS1                           00000005
 T1CON                             00000FCD
@@ -826,6 +1381,7 @@ TBLPTR                            00000FF6
 TBLPTRH                           00000FF7
 TBLPTRL                           00000FF6
 TBLPTRU                           00000FF8
+TIMES                             00000003
 TMR0                              00000FD6
 TMR0H                             00000FD7
 TMR0IE                            00000005
@@ -848,16 +1404,16 @@ TMR2IP                            00000001
 TMR2ON                            00000002
 TMR3                              00000FB2
 TMR3CS                            00000001
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 16
+TMR3H                             00000FB3
+TMR3IE                            00000001
+TMR3IF                            00000001
+TMR3IP                            00000001
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 25
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-TMR3H                             00000FB3
-TMR3IE                            00000001
-TMR3IF                            00000001
-TMR3IP                            00000001
 TMR3L                             00000FB2
 TMR3ON                            00000000
 TO                                00000003
@@ -907,16 +1463,16 @@ TRISD6                            00000006
 TRISD7                            00000007
 TRISE                             00000F96
 TRISE0                            00000000
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 17
+TRISE1                            00000001
+TRISE2                            00000002
+TRMT                              00000001
+TUN0                              00000000
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 26
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-TRISE1                            00000001
-TRISE2                            00000002
-TRMT                              00000001
-TUN0                              00000000
 TUN1                              00000001
 TUN2                              00000002
 TUN3                              00000003
@@ -939,17 +1495,19 @@ VPP                               00000003
 VREFM                             00000002
 VREFP                             00000003
 W                                 00000000
+WAIT                              00000009
 WCOL                              00000007
 WDTCON                            00000FD1
-WORD                              00000004
+WORD                              00000002
 WR                                00000001
 WREG                              00000FE8
 WREN                              00000002
 WRERR                             00000003
 WUE                               00000001
 Z                                 00000002
-_.org_2_00A4                      000000A4
-_.org_2_00B0                      000000B0
+_.org_2_016A                      0000016A
+_.org_2_025C                      0000025C
+_.org_2_0268                      00000268
 _BBSIZ_BB1K_4L                    000000FF
 _BBSIZ_BB256_4L                   000000CF
 _BBSIZ_BB512_4L                   000000DF
@@ -966,14 +1524,14 @@ _CCP2MX_RC1_3H                    000000FF
 _CONFIG1H                         00300001
 _CONFIG2H                         00300003
 _CONFIG2L                         00300002
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 18
+_CONFIG3H                         00300005
+_CONFIG4L                         00300006
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 27
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-_CONFIG3H                         00300005
-_CONFIG4L                         00300006
 _CONFIG5H                         00300009
 _CONFIG5L                         00300008
 _CONFIG6H                         0030000B
@@ -1025,14 +1583,14 @@ _OSC_INTIO2_1H                    000000F8
 _OSC_LP_1H                        000000F0
 _OSC_RCIO_1H                      000000F7
 _OSC_RC_1H                        000000F3
-MPASM 5.70                          MAIN.ASM   2-13-2017  13:24:35         PAGE 19
+_OSC_XT_1H                        000000F1
+_PBADEN_ANA_3H                    000000FF
+MPASM 5.71                          MAIN.ASM   5-12-2017  18:19:50         PAGE 28
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-_OSC_XT_1H                        000000F1
-_PBADEN_ANA_3H                    000000FF
 _PBADEN_DIG_3H                    000000FD
 _PWRT_OFF_2L                      000000FF
 _PWRT_ON_2L                       000000FE

@@ -1,0 +1,132 @@
+MPLINK 5.08, LINKER
+Linker Map File - Created Fri May 12 18:19:51 2017
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000004
+                   .cinit    romdata   0x000004    program   0x000002
+                   .org_1       code   0x000008    program   0x000004
+                   .org_2       code   0x000018    program   0x0002d4
+.config_300001_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300001    program   0x000001
+.config_300003_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300003    program   0x000001
+.config_300005_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300005    program   0x000001
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000005      
+                            0x000008    0x00000b      
+                            0x000018    0x0002eb      
+                            0x300001    0x300001      
+                            0x300003    0x300003      
+                            0x300005    0x300005      
+            737 out of 8472 program addresses used, program memory utilization is 8%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                    BUCLE   0x00009c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               BUCLE_WORD   0x0001f8    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+          CHECK_LOAD_15MS   0x0000cc    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+           CHECK_LOAD_BTN   0x0000b4    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+          CHECK_LOAD_FLAG   0x0000bc    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+          CHECK_SEND_15MS   0x00011c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+           CHECK_SEND_BTN   0x000104    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+          CHECK_SEND_FLAG   0x00010c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               CHECK_SIZE   0x0001e8    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               CHECK_WORD   0x000214    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+              DEMANA_CHAR   0x000164    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                   DIV_10   0x0002d6    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+          END_ENVIA_TRAMA   0x000248    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+              ENVIA_TRAMA   0x0001e0    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+              GUARDA_CHAR   0x00018a    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 HIGH_INT   0x00001a    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+            HI_INT_VECTOR   0x000008    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+              INIT_EUSART   0x00006c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                INIT_INTS   0x000060    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               INIT_PORTS   0x00004a    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 INIT_TMR   0x00007c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                INIT_VARS   0x00002c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               LEDS_BLINK   0x0002a4    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               LEDS_HORIZ   0x000270    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 LEDS_SEG   0x0002b6    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 LOAD_BTN   0x0000f0    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+           LOW_INT_VECTOR   0x000018    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                     MAIN   0x000088    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                MOVE_LEFT   0x00027e    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               MOVE_RIGHT   0x000292    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 NEXT_LED   0x00023e    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+             RESET_VECTOR   0x000000    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                     RF_0   0x000258    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                     RF_1   0x000264    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                    RF_KO   0x0001ac    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                    RF_OK   0x0001ba    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                    RX_PC   0x000146    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                   SEND_0   0x00020c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                   SEND_1   0x000200    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 SEND_BTN   0x000132    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+             SEND_MESSAGE   0x000198    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 SEND_RAM   0x0001c4    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                  SEND_RF   0x00019c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+             _.org_2_016A   0x00016a    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+             _.org_2_025C   0x00025c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+             _.org_2_0268   0x000268    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+             RESET_VECTOR   0x000000    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+            HI_INT_VECTOR   0x000008    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+           LOW_INT_VECTOR   0x000018    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 HIGH_INT   0x00001a    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                INIT_VARS   0x00002c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               INIT_PORTS   0x00004a    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                INIT_INTS   0x000060    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+              INIT_EUSART   0x00006c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 INIT_TMR   0x00007c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                     MAIN   0x000088    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                    BUCLE   0x00009c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+           CHECK_LOAD_BTN   0x0000b4    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+          CHECK_LOAD_FLAG   0x0000bc    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+          CHECK_LOAD_15MS   0x0000cc    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 LOAD_BTN   0x0000f0    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+           CHECK_SEND_BTN   0x000104    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+          CHECK_SEND_FLAG   0x00010c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+          CHECK_SEND_15MS   0x00011c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 SEND_BTN   0x000132    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                    RX_PC   0x000146    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+              DEMANA_CHAR   0x000164    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+             _.org_2_016A   0x00016a    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+              GUARDA_CHAR   0x00018a    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+             SEND_MESSAGE   0x000198    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                  SEND_RF   0x00019c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                    RF_KO   0x0001ac    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                    RF_OK   0x0001ba    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 SEND_RAM   0x0001c4    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+              ENVIA_TRAMA   0x0001e0    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               CHECK_SIZE   0x0001e8    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               BUCLE_WORD   0x0001f8    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                   SEND_1   0x000200    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                   SEND_0   0x00020c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               CHECK_WORD   0x000214    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 NEXT_LED   0x00023e    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+          END_ENVIA_TRAMA   0x000248    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                     RF_0   0x000258    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+             _.org_2_025C   0x00025c    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                     RF_1   0x000264    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+             _.org_2_0268   0x000268    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               LEDS_HORIZ   0x000270    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                MOVE_LEFT   0x00027e    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               MOVE_RIGHT   0x000292    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+               LEDS_BLINK   0x0002a4    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                 LEDS_SEG   0x0002b6    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+                   DIV_10   0x0002d6    program     static C:\Users\alexj\MPLABXProjects\Walkie-asm\main.asm
+
+

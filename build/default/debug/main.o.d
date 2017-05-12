@@ -1,3 +1,3 @@
-build/default/production/main.o:  \
+build/default/debug/main.o:  \
 	C:/Users/alexj/MPLABXProjects/Walkie-asm/main.asm  \
 
